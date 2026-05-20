@@ -80,3 +80,8 @@ Open:
 - Add per-user scan scheduling (optional)
 - Add attachment download + scanning (requires more Gmail scopes + careful handling)
 - Add role-based access, admin reporting, audit logs
+
+
+## Copyright
+
+© 2026 Afolarin Ayomide. All rights reserved.
