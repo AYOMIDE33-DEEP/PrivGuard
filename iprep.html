@@ -1,0 +1,950 @@
+<!-- IPREP_UI_VERSION = SOC_FULLSCREEN_MATCH_V3 -->
+<div class="iprep-shell">
+  <div class="iprep-page-head">
+    <div class="iprep-head-left">
+      <div class="iprep-head-icon">🌐</div>
+      <div>
+        <h2 class="iprep-title">IP REPUTATION INTELLIGENCE</h2>
+        <div class="iprep-subtitle">
+          Analyze IP addresses for abuse reports, malicious activity, and network information.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="iprep-divider"></div>
+
+  <div class="iprep-main-card">
+    <div class="iprep-card-title">
+      <span class="iprep-card-title-icon">◔</span>
+      <span>IP OVERVIEW</span>
+    </div>
+
+    <div class="iprep-top-grid">
+      <!-- LEFT INFO STRIP -->
+      <div class="iprep-overview-strip" id="pgIpOverviewCard" style="display:none;">
+        <div class="iprep-strip-left">
+          <div class="iprep-main-ip" id="pgIpBig">8.8.8.8</div>
+          <div class="iprep-main-ip-label">IP Address</div>
+        </div>
+
+        <div class="iprep-strip-divider"></div>
+
+        <div class="iprep-strip-right">
+          <div class="iprep-main-score-line">
+            <span id="pgIpScoreBig">12</span>
+            <span class="iprep-main-score-small">/ 100</span>
+          </div>
+          <div class="iprep-main-score-badge low" id="pgIpThreatBadge">LOW</div>
+        </div>
+      </div>
+
+      <!-- RIGHT RING -->
+      <div class="iprep-ring-panel" id="pgRingPanel" style="display:none;">
+        <div class="iprep-ring-wrap">
+          <svg class="iprep-ring" viewBox="0 0 240 240" aria-label="Risk score ring">
+            <defs>
+              <linearGradient id="iprepRingSafe" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="rgba(0,255,156,1)"></stop>
+                <stop offset="100%" stop-color="rgba(0,245,255,1)"></stop>
+              </linearGradient>
+              <linearGradient id="iprepRingLow" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="rgba(0,255,156,1)"></stop>
+                <stop offset="100%" stop-color="rgba(255,230,80,1)"></stop>
+              </linearGradient>
+              <linearGradient id="iprepRingMed" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="rgba(255,200,80,1)"></stop>
+                <stop offset="100%" stop-color="rgba(255,140,50,1)"></stop>
+              </linearGradient>
+              <linearGradient id="iprepRingHigh" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="rgba(255,104,104,1)"></stop>
+                <stop offset="100%" stop-color="rgba(255,72,99,1)"></stop>
+              </linearGradient>
+
+              <filter id="iprepGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="5" result="blur"></feGaussianBlur>
+                <feMerge>
+                  <feMergeNode in="blur"></feMergeNode>
+                  <feMergeNode in="SourceGraphic"></feMergeNode>
+                </feMerge>
+              </filter>
+            </defs>
+
+            <circle class="iprep-ring-track" cx="120" cy="120" r="88"></circle>
+            <circle class="iprep-ring-score low" id="pgRingFg" cx="120" cy="120" r="88"></circle>
+            <circle class="iprep-ring-dot low" id="pgRingDot" cx="120" cy="32" r="6"></circle>
+          </svg>
+
+          <div class="iprep-ring-center">
+            <div class="iprep-ring-threat" id="pgRingThreat">LOW</div>
+            <div class="iprep-ring-score-value" id="pgRingScore">12</div>
+            <div class="iprep-ring-score-sub"><span id="pgRingScoreLine">12</span> / 100</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div id="pgIpEmpty" class="iprep-empty">
+        Enter an IP address below and click SCAN to display the full reputation intelligence dashboard.
+      </div>
+    </div>
+
+    <!-- INPUT ROW -->
+    <div class="iprep-input-row">
+      <div class="iprep-input-wrap">
+        <input id="pgIpInput" class="iprep-input" placeholder="Enter IP address e.g. 8.8.8.8" />
+        <button class="iprep-scan-btn" id="pgIpScanBtn" onclick="pgIpCheck()">SCAN</button>
+        <button class="iprep-settings-btn" onclick="pgIpOpenSettings()" title="Settings">⚙</button>
+      </div>
+      <div id="pgIpAlert" class="iprep-alert" style="display:none;"></div>
+    </div>
+
+    <div id="pgIpSummaryWrap" style="display:none;">
+      <div class="iprep-section-title">Reputation Summary</div>
+
+      <div class="iprep-summary-grid">
+        <!-- AbuseIPDB -->
+        <div class="iprep-intel-card" id="pgAbCard">
+          <div class="iprep-intel-head">
+            <div class="iprep-intel-brand">
+              <span class="iprep-intel-icon shield">🛡️</span>
+              <span>AbuseIPDB</span>
+            </div>
+          </div>
+
+          <div class="iprep-intel-body">
+            <div class="iprep-info-line"><span>Abuse Confidence Score:</span> <strong id="pgAbScore">0</strong></div>
+            <div class="iprep-info-line"><span>Total Reports:</span> <strong id="pgAbReports">48</strong></div>
+            <div class="iprep-info-line"><span>Last Reported:</span> <strong id="pgAbLast">02 Mar 2026</strong></div>
+            <div class="iprep-info-line"><span>Usage Type:</span> <strong id="pgAbUsage">Content Delivery Network</strong></div>
+            <div class="iprep-info-line"><span>ISP:</span> <strong id="pgAbIsp">Google LLC</strong></div>
+          </div>
+
+          <div class="iprep-intel-foot">
+            <button class="iprep-clean-badge" id="pgAbPillBtn" disabled>CLEAN</button>
+          </div>
+        </div>
+
+        <!-- VirusTotal -->
+        <div class="iprep-intel-card" id="pgVtCard">
+          <div class="iprep-intel-head">
+            <div class="iprep-intel-brand">
+              <span class="iprep-intel-icon virus">✸</span>
+              <span>VirusTotal</span>
+            </div>
+          </div>
+
+          <div class="iprep-intel-body">
+            <div class="iprep-info-line"><span>Malicious Detections:</span> <strong id="pgVtMal">0 / 94</strong></div>
+            <div class="iprep-info-line"><span>Suspicious Flags:</span> <strong id="pgVtSusp">0</strong></div>
+            <div class="iprep-info-line"><span>Harmless Votes:</span> <strong id="pgVtHarmless">14</strong></div>
+          </div>
+
+          <div class="iprep-intel-foot">
+            <div class="iprep-reputation-pill" id="pgVtRepPill">REPUTATION SCORE: 18</div>
+          </div>
+        </div>
+
+        <!-- IPinfo -->
+        <div class="iprep-intel-card" id="pgInfoCard">
+          <div class="iprep-intel-head">
+            <div class="iprep-intel-brand">
+              <span class="iprep-intel-icon flag">🇺🇸</span>
+              <span>IPinfo</span>
+            </div>
+          </div>
+
+          <div class="iprep-intel-body iprep-info-list">
+            <div class="iprep-info-bullet"><span class="iprep-bullet-icon">◉</span><strong id="pgInfoLoc">United States</strong></div>
+            <div class="iprep-info-bullet"><span class="iprep-bullet-icon">⌖</span><span id="pgInfoCity">City: Mountain View</span></div>
+            <div class="iprep-info-bullet"><span class="iprep-bullet-icon">◎</span><span id="pgInfoIsp">ISP: Google LLC</span></div>
+            <div class="iprep-info-bullet"><span class="iprep-bullet-icon">▣</span><span id="pgInfoAsn">ASN: AS15169</span></div>
+            <div class="iprep-info-bullet"><span class="iprep-bullet-icon">◔</span><span id="pgInfoHost">Hosting Type: Content Delivery Network</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="iprep-findings-wrap" style="display:none;">
+        <div class="iprep-findings-title">Key Findings</div>
+        <div id="pgIpFindings"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="pgIpSettingsOverlay" class="pg-overlay" style="display:none;">
+  <div class="pg-modal">
+    <div class="pg-modal-head">
+      <div>
+        <div class="pg-modal-title">Scan Settings</div>
+        <div class="pg-modal-sub">Online checks are optional. API keys are backend-only (.env).</div>
+      </div>
+      <button class="pg-x" onclick="pgIpCloseSettings()">✕</button>
+    </div>
+
+    <div class="pg-modal-body">
+      <div class="pg-panel">
+        <div class="pg-switch-row">
+          <label class="pg-switch">
+            <input id="pgIpEnableOnline" type="checkbox" />
+            <span class="pg-slider"></span>
+          </label>
+          <div>
+            <div class="pg-switch-title">Enable online reputation (VirusTotal / AbuseIPDB / IPinfo)</div>
+            <div class="pg-switch-sub">If OFF, only offline validation may be returned by backend.</div>
+          </div>
+        </div>
+
+        <div id="pgIpSavedLine" class="muted" style="margin-top:14px; font-size:12px;">
+          Not saved yet.
+        </div>
+      </div>
+    </div>
+
+    <div class="pg-modal-foot">
+      <button class="btn" style="min-width:140px;" onclick="pgIpSaveSettings()">SAVE</button>
+      <button class="btn btn-ghost" style="min-width:140px;" onclick="pgIpCloseSettings()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.iprep-shell{
+  width:100%;
+  min-height:calc(100vh - 28px);
+  padding:8px 6px 10px;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(255,72,99,.10), transparent 20%),
+    radial-gradient(circle at 18% 78%, rgba(0,245,255,.08), transparent 22%),
+    linear-gradient(180deg, rgba(7,11,20,.76), rgba(6,10,18,.94));
+  border:1px solid rgba(0,245,255,.10);
+  border-radius:24px;
+  box-shadow:0 18px 60px rgba(0,0,0,.35), 0 0 0 1px rgba(0,245,255,.04) inset;
+}
+
+.iprep-page-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  padding:6px 6px 10px;
+}
+.iprep-head-left{
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+}
+.iprep-head-icon{
+  width:46px;
+  height:46px;
+  display:grid;
+  place-items:center;
+  border-radius:14px;
+  font-size:22px;
+  color:#00f5ff;
+  border:1px solid rgba(0,245,255,.18);
+  background:rgba(10,22,48,.42);
+  box-shadow:inset 0 0 16px rgba(0,245,255,.08);
+}
+.iprep-title{
+  margin:0;
+  font-size:24px;
+  letter-spacing:.7px;
+  font-weight:1100;
+}
+.iprep-subtitle{
+  margin-top:8px;
+  color:rgba(214,224,245,.86);
+  font-size:13px;
+}
+.iprep-divider{
+  height:1px;
+  background:rgba(255,255,255,.12);
+  margin:4px 4px 16px;
+}
+
+.iprep-main-card{
+  border:1px solid rgba(0,245,255,.14);
+  border-radius:24px;
+  background:linear-gradient(180deg, rgba(10,17,31,.76), rgba(8,14,26,.92));
+  box-shadow:0 0 0 1px rgba(0,245,255,.04) inset;
+  padding:18px 20px 20px;
+  min-height:760px;
+}
+.iprep-card-title{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:18px;
+  font-weight:1000;
+  letter-spacing:.5px;
+  margin-bottom:14px;
+}
+.iprep-card-title-icon{
+  opacity:.8;
+}
+
+.iprep-top-grid{
+  display:grid;
+  grid-template-columns: minmax(0, 1.1fr) 360px;
+  gap:20px;
+  align-items:center;
+}
+.iprep-overview-strip{
+  min-height:170px;
+  border-radius:20px;
+  border:1px solid rgba(0,245,255,.12);
+  background:linear-gradient(180deg, rgba(13,25,46,.56), rgba(9,18,34,.76));
+  box-shadow:inset 0 0 24px rgba(0,245,255,.04);
+  padding:18px 28px;
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) 1px 220px;
+  align-items:center;
+}
+.iprep-strip-left{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.iprep-main-ip{
+  font-size:40px;
+  font-weight:1100;
+  letter-spacing:.5px;
+  line-height:1;
+}
+.iprep-main-ip-label{
+  margin-top:24px;
+  font-size:22px;
+  color:rgba(220,230,248,.90);
+}
+.iprep-strip-divider{
+  width:1px;
+  height:96px;
+  background:rgba(255,255,255,.12);
+  justify-self:center;
+}
+.iprep-strip-right{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  padding-left:14px;
+}
+.iprep-main-score-line{
+  display:flex;
+  align-items:flex-end;
+  gap:8px;
+  font-weight:1100;
+  line-height:1;
+}
+#pgIpScoreBig{
+  font-size:46px;
+  font-weight:1100;
+}
+.iprep-main-score-small{
+  font-size:26px;
+  color:rgba(220,230,248,.90);
+  margin-bottom:4px;
+}
+.iprep-main-score-badge{
+  margin-top:16px;
+  min-width:112px;
+  text-align:center;
+  padding:10px 20px;
+  border-radius:16px;
+  font-size:18px;
+  font-weight:1000;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:inset 0 0 14px rgba(255,255,255,.03);
+}
+.iprep-main-score-badge.safe{
+  color:#c7ffed;
+  background:rgba(0,255,156,.10);
+  border-color:rgba(0,255,156,.30);
+}
+.iprep-main-score-badge.low{
+  color:#cffff0;
+  background:rgba(0,255,156,.10);
+  border-color:rgba(0,255,156,.28);
+}
+.iprep-main-score-badge.medium{
+  color:#ffeabf;
+  background:rgba(255,190,70,.10);
+  border-color:rgba(255,190,70,.32);
+}
+.iprep-main-score-badge.high{
+  color:#ffd0d8;
+  background:rgba(255,72,99,.12);
+  border-color:rgba(255,72,99,.34);
+}
+
+.iprep-ring-panel{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.iprep-ring-wrap{
+  position:relative;
+  width:280px;
+  height:280px;
+  display:grid;
+  place-items:center;
+}
+.iprep-ring{
+  width:280px;
+  height:280px;
+}
+.iprep-ring-track{
+  fill:none;
+  stroke:rgba(255,255,255,.10);
+  stroke-width:22;
+}
+.iprep-ring-score{
+  fill:none;
+  stroke-width:22;
+  stroke-linecap:round;
+  transform:rotate(-90deg);
+  transform-origin:120px 120px;
+  stroke-dasharray:552.92;
+  stroke-dashoffset:552.92;
+  filter:url(#iprepGlow);
+  transition:stroke-dashoffset .35s ease, stroke .2s ease;
+}
+.iprep-ring-score.safe{ stroke:url(#iprepRingSafe); }
+.iprep-ring-score.low{ stroke:url(#iprepRingLow); }
+.iprep-ring-score.medium{ stroke:url(#iprepRingMed); }
+.iprep-ring-score.high{ stroke:url(#iprepRingHigh); }
+
+.iprep-ring-dot{
+  transition:cx .35s ease, cy .35s ease, fill .2s ease;
+}
+.iprep-ring-dot.safe{ fill:rgba(0,255,156,.95); }
+.iprep-ring-dot.low{ fill:rgba(0,255,156,.95); }
+.iprep-ring-dot.medium{ fill:rgba(255,200,80,.95); }
+.iprep-ring-dot.high{ fill:rgba(255,72,99,.95); }
+
+.iprep-ring-center{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+.iprep-ring-threat{
+  font-size:40px;
+  font-weight:1100;
+  letter-spacing:.5px;
+}
+.iprep-ring-score-value{
+  margin-top:6px;
+  font-size:40px;
+  font-weight:1100;
+  line-height:1;
+}
+.iprep-ring-score-sub{
+  margin-top:8px;
+  font-size:19px;
+  color:rgba(220,230,248,.90);
+  font-weight:900;
+}
+
+.iprep-empty{
+  grid-column:1 / -1;
+  border:1px dashed rgba(0,245,255,.16);
+  border-radius:18px;
+  background:rgba(0,0,0,.14);
+  color:rgba(214,224,245,.82);
+  padding:18px;
+}
+
+.iprep-input-row{
+  margin-top:18px;
+  margin-bottom:18px;
+}
+.iprep-input-wrap{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  gap:10px;
+}
+.iprep-input{
+  width:100%;
+  min-width:0;
+  height:58px;
+  border-radius:16px;
+  border:1px solid rgba(0,245,255,.16);
+  background:linear-gradient(180deg, rgba(10,24,45,.78), rgba(8,18,34,.94));
+  color:rgba(235,244,255,.95);
+  padding:0 18px;
+  font-size:18px;
+  outline:none;
+  box-shadow: inset 0 0 14px rgba(0,245,255,.06);
+}
+.iprep-input:focus{
+  border-color:rgba(0,245,255,.38);
+  box-shadow:0 0 0 1px rgba(0,245,255,.12), inset 0 0 16px rgba(0,245,255,.10);
+}
+.iprep-scan-btn,
+.iprep-settings-btn{
+  height:58px;
+  border-radius:16px;
+  border:1px solid rgba(0,245,255,.18);
+  color:rgba(235,244,255,.95);
+  cursor:pointer;
+}
+.iprep-scan-btn{
+  min-width:146px;
+  padding:0 24px;
+  font-weight:1000;
+  letter-spacing:.5px;
+  background:linear-gradient(180deg, rgba(18,89,84,.95), rgba(10,64,59,.95));
+  border-color:rgba(0,255,156,.35);
+  box-shadow:0 0 20px rgba(0,255,156,.08);
+}
+.iprep-settings-btn{
+  width:58px;
+  font-size:18px;
+  background:rgba(12,20,36,.88);
+}
+.iprep-alert{
+  margin-top:10px;
+  border:1px solid rgba(255,72,99,.50);
+  background:rgba(255,72,99,.08);
+  color:rgba(215,224,255,.92);
+  border-radius:14px;
+  padding:12px 14px;
+}
+
+.iprep-section-title{
+  margin:12px 0 18px;
+  font-size:19px;
+  font-weight:1100;
+  letter-spacing:.3px;
+}
+
+.iprep-summary-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:18px;
+}
+.iprep-intel-card{
+  min-height:365px;
+  border-radius:20px;
+  border:1px solid rgba(0,245,255,.12);
+  background:linear-gradient(180deg, rgba(13,23,42,.52), rgba(9,16,31,.82));
+  box-shadow:inset 0 0 18px rgba(0,245,255,.03);
+  padding:20px 22px;
+  transition:transform .15s ease, border-color .15s ease;
+}
+.iprep-intel-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(0,245,255,.20);
+}
+.iprep-intel-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:18px;
+}
+.iprep-intel-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:22px;
+  font-weight:1100;
+}
+.iprep-intel-icon{
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  display:grid;
+  place-items:center;
+  font-size:20px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(0,0,0,.14);
+}
+.iprep-intel-icon.shield{ color:#7fffd1; }
+.iprep-intel-icon.virus{ color:#ff6d8a; }
+.iprep-intel-icon.flag{ font-size:26px; }
+
+.iprep-intel-body{
+  display:grid;
+  gap:12px;
+}
+.iprep-info-line{
+  font-size:18px;
+  line-height:1.45;
+  color:rgba(220,230,248,.92);
+}
+.iprep-info-line span{
+  color:rgba(220,230,248,.92);
+}
+.iprep-info-line strong{
+  font-weight:1000;
+}
+
+.iprep-intel-foot{
+  margin-top:24px;
+}
+.iprep-clean-badge{
+  min-width:160px;
+  height:50px;
+  border:none;
+  border-radius:18px;
+  color:#d7fff2;
+  background:linear-gradient(180deg, rgba(24,111,100,.95), rgba(16,84,76,.95));
+  box-shadow:0 0 18px rgba(0,255,156,.10), inset 0 0 14px rgba(255,255,255,.04);
+  font-size:18px;
+  font-weight:1100;
+}
+.iprep-reputation-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  padding:0 18px;
+  border-radius:16px;
+  border:1px solid rgba(0,245,255,.14);
+  background:rgba(0,0,0,.14);
+  font-size:16px;
+  letter-spacing:.6px;
+  color:rgba(215,224,255,.96);
+  font-weight:1000;
+}
+
+.iprep-info-list{
+  gap:14px;
+}
+.iprep-info-bullet{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  font-size:18px;
+  line-height:1.45;
+  color:rgba(220,230,248,.92);
+}
+.iprep-bullet-icon{
+  width:18px;
+  flex:0 0 18px;
+  opacity:.9;
+}
+
+.iprep-findings-wrap{
+  margin-top:18px;
+  border-radius:18px;
+  border:1px solid rgba(0,245,255,.10);
+  background:rgba(0,0,0,.12);
+  padding:16px;
+}
+.iprep-findings-title{
+  font-size:18px;
+  font-weight:1000;
+  margin-bottom:10px;
+}
+
+@media (max-width: 1280px){
+  .iprep-top-grid{
+    grid-template-columns:1fr;
+  }
+  .iprep-summary-grid{
+    grid-template-columns:1fr;
+  }
+  .iprep-overview-strip{
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+  .iprep-strip-divider{
+    display:none;
+  }
+  .iprep-strip-right{
+    padding-left:0;
+  }
+}
+@media (max-width: 760px){
+  .iprep-input-wrap{
+    grid-template-columns:1fr;
+  }
+  .iprep-main-card{
+    padding:16px 14px 18px;
+  }
+  .iprep-main-ip{
+    font-size:30px;
+  }
+  .iprep-ring-wrap,
+  .iprep-ring{
+    width:240px;
+    height:240px;
+  }
+}
+
+/* Existing modal styles retained */
+.pg-overlay{ position: fixed; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); display:flex; align-items:center; justify-content:center; z-index: 9999; }
+.pg-modal{ width: min(900px, 92vw); max-height: min(84vh, 760px); border-radius: 16px; border: 1px solid rgba(0,245,255,.18); background: linear-gradient(180deg, rgba(7,14,32,.96), rgba(5,10,24,.96)); box-shadow: 0 25px 80px rgba(0,0,0,.55); display:flex; flex-direction:column; overflow:hidden; }
+.pg-modal-head{ padding: 16px 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; border-bottom: 1px solid rgba(0,245,255,.12); }
+.pg-modal-title{ font-weight: 900; font-size: 20px; letter-spacing:.4px; }
+.pg-modal-sub{ margin-top:6px; color: rgba(170,190,235,.82); font-size: 13px; }
+.pg-x{ border: 1px solid rgba(0,245,255,.18); background: rgba(10,22,48,.55); color: rgba(215,224,255,.92); border-radius: 10px; padding: 8px 12px; cursor:pointer; }
+.pg-modal-body{ padding: 18px; overflow:auto; }
+.pg-panel{ border: 1px solid rgba(0,245,255,.12); border-radius: 16px; padding: 16px; background: rgba(10,22,48,.28); }
+.pg-switch-row{ display:flex; gap:14px; align-items:center; }
+.pg-switch-title{ font-weight: 800; color: rgba(215,224,255,.92); }
+.pg-switch-sub{ color: rgba(170,190,235,.78); font-size: 12px; margin-top:3px; }
+.pg-switch{ position: relative; display:inline-block; width: 52px; height: 28px; }
+.pg-switch input{ display:none; }
+.pg-slider{ position:absolute; inset:0; border-radius:999px; background: rgba(80,95,130,.45); border: 1px solid rgba(0,245,255,.18); transition: .2s; }
+.pg-slider:before{ content:""; position:absolute; width:22px; height:22px; left:3px; top:2px; background: rgba(215,224,255,.92); border-radius:50%; transition: .2s; }
+.pg-switch input:checked + .pg-slider{ background: rgba(0,245,255,.18); border-color: rgba(0,245,255,.35); }
+.pg-switch input:checked + .pg-slider:before{ transform: translateX(24px); background: rgba(0,245,255,.92); }
+.pg-modal-foot{ padding: 16px 18px; border-top: 1px solid rgba(0,245,255,.12); display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+</style>
+
+<script>
+const PG_IP_SETTINGS_KEY = "privguard.settings.iprep.v2";
+
+/* -------------------- helpers -------------------- */
+function pgIpShowAlert(msg){
+  const el = document.getElementById("pgIpAlert");
+  el.style.display = "block";
+  el.textContent = msg;
+}
+function pgIpClearAlert(){
+  const el = document.getElementById("pgIpAlert");
+  el.style.display = "none";
+  el.textContent = "";
+}
+function pgIpGetSettings(){
+  try{ return JSON.parse(localStorage.getItem(PG_IP_SETTINGS_KEY) || "{}") || {}; }catch(e){ return {}; }
+}
+function pgIpPaintQuickStatus(){}
+
+function pgIpOpenSettings(){
+  const s = pgIpGetSettings();
+  document.getElementById("pgIpEnableOnline").checked = (s.enable_online !== undefined) ? !!s.enable_online : true;
+  document.getElementById("pgIpSavedLine").textContent = s.saved_at ? ("Saved locally: " + s.saved_at) : "Not saved yet.";
+  document.getElementById("pgIpSettingsOverlay").style.display = "flex";
+}
+function pgIpCloseSettings(){ document.getElementById("pgIpSettingsOverlay").style.display = "none"; }
+function pgIpSaveSettings(){
+  const enable_online = !!document.getElementById("pgIpEnableOnline").checked;
+  localStorage.setItem(PG_IP_SETTINGS_KEY, JSON.stringify({
+    enable_online,
+    saved_at: new Date().toLocaleString(),
+  }));
+  pgIpCloseSettings();
+  pgIpShowAlert("Settings saved.");
+  setTimeout(pgIpClearAlert, 1400);
+}
+
+function clampScore(s){
+  s = Number(s);
+  if(!Number.isFinite(s)) return 0;
+  if(s < 0) return 0;
+  if(s > 100) return 100;
+  return Math.round(s);
+}
+
+function uiThreatClass(score){
+  const s = clampScore(score);
+  if(s <= 10) return "safe";
+  if(s <= 29) return "low";
+  if(s <= 59) return "medium";
+  return "high";
+}
+function uiThreatLabel(score, rawVerdict){
+  const direct = String(rawVerdict || "").toUpperCase().trim();
+  if(direct.includes("HIGH")) return "HIGH";
+  if(direct.includes("MEDIUM")) return "MEDIUM";
+  if(direct.includes("LOW")) return "LOW";
+  if(direct.includes("SAFE")) return "SAFE";
+
+  const c = uiThreatClass(score);
+  if(c === "high") return "HIGH";
+  if(c === "medium") return "MEDIUM";
+  if(c === "low") return "LOW";
+  return "SAFE";
+}
+
+function setRing(score, threatLabel){
+  const s = clampScore(score);
+  const r = 88;
+  const circumference = 2 * Math.PI * r;
+  const offset = circumference - (s/100) * circumference;
+
+  const fg = document.getElementById("pgRingFg");
+  const dot = document.getElementById("pgRingDot");
+  const cls = uiThreatClass(s);
+
+  fg.style.strokeDasharray = `${circumference}`;
+  fg.style.strokeDashoffset = `${offset}`;
+  fg.classList.remove("safe","low","medium","high");
+  fg.classList.add(cls);
+
+  dot.classList.remove("safe","low","medium","high");
+  dot.classList.add(cls);
+
+  const angle = (s / 100) * 2 * Math.PI - Math.PI / 2;
+  const cx = 120 + r * Math.cos(angle);
+  const cy = 120 + r * Math.sin(angle);
+  dot.setAttribute("cx", cx.toFixed(2));
+  dot.setAttribute("cy", cy.toFixed(2));
+
+  document.getElementById("pgRingScore").textContent = `${s}`;
+  document.getElementById("pgRingScoreLine").textContent = `${s}`;
+  document.getElementById("pgRingThreat").textContent = String(threatLabel || "—");
+}
+
+function setTopBadge(score, label){
+  const el = document.getElementById("pgIpThreatBadge");
+  const cls = uiThreatClass(score);
+  el.classList.remove("safe","low","medium","high");
+  el.classList.add(cls);
+  el.textContent = label;
+}
+
+function countryFlag(code){
+  const cc = String(code || "").trim().toUpperCase();
+  if(cc.length !== 2) return "";
+  const A = 0x1F1E6;
+  const first = cc.charCodeAt(0) - 65;
+  const second = cc.charCodeAt(1) - 65;
+  if(first < 0 || first > 25 || second < 0 || second > 25) return "";
+  return String.fromCodePoint(A + first, A + second);
+}
+function countryName(code){
+  const cc = String(code || "").trim().toUpperCase();
+  try{
+    if(typeof Intl !== "undefined" && Intl.DisplayNames){
+      const dn = new Intl.DisplayNames(["en"], { type:"region" });
+      return dn.of(cc) || cc;
+    }
+  }catch(e){}
+  return cc || "—";
+}
+function pickSource(data, key){
+  if(data && data.sources && data.sources[key]) return data.sources[key];
+  if(data && data.intel && data.intel[key]) return data.intel[key];
+  return null;
+}
+function fmtDate(v){
+  if(!v) return "—";
+  const s = String(v);
+  const d = new Date(s);
+  if(!isNaN(d.getTime())){
+    return d.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"2-digit" });
+  }
+  return s;
+}
+
+/* -------------------- main scan -------------------- */
+async function pgIpCheck(){
+  pgIpClearAlert();
+  const btn = document.getElementById("pgIpScanBtn");
+  const ip = (document.getElementById("pgIpInput").value || "").trim();
+  if(!ip){ pgIpShowAlert("Enter an IP first."); return; }
+
+  btn.disabled = true;
+  btn.textContent = "SCANNING…";
+
+  document.getElementById("pgIpEmpty").style.display = "block";
+  document.getElementById("pgIpOverviewCard").style.display = "none";
+  document.getElementById("pgRingPanel").style.display = "none";
+  document.getElementById("pgIpSummaryWrap").style.display = "none";
+
+  try{
+    const s = pgIpGetSettings();
+    const enable_online = (s.enable_online !== undefined) ? !!s.enable_online : true;
+
+    const r = await fetch("/api/iprep", {
+      method:"POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ ip, enable_online })
+    });
+
+    const data = await r.json().catch(() => ({}));
+    if(!r.ok || data.error){
+      pgIpShowAlert(data.error || "Lookup failed.");
+      return;
+    }
+
+    const score = clampScore(data.risk_score ?? data.score ?? 0);
+    const threat = uiThreatLabel(score, data.verdict || data.classification || data.label || "SAFE");
+
+    const ab = pickSource(data, "abuseipdb") || {};
+    const vt = pickSource(data, "virustotal") || {};
+    const info = pickSource(data, "ipinfo") || {};
+
+    const cc = info.countryCode || info.country || "";
+    const flag = countryFlag(cc);
+    const cName = countryName(cc);
+
+    document.getElementById("pgIpEmpty").style.display = "none";
+    document.getElementById("pgIpOverviewCard").style.display = "grid";
+    document.getElementById("pgRingPanel").style.display = "flex";
+    document.getElementById("pgIpSummaryWrap").style.display = "block";
+
+    document.getElementById("pgIpBig").textContent = String(data.ip || ip);
+    document.getElementById("pgIpScoreBig").textContent = `${score}`;
+    setTopBadge(score, threat);
+    setRing(score, threat);
+
+    // AbuseIPDB
+    const abScore = (ab.abuseConfidenceScore ?? ab.confidence ?? ab.score);
+    const abReports = (ab.totalReports ?? ab.reports);
+    const abLast = (ab.lastReportedAt ?? ab.last_reported);
+    const abUsage = (ab.usageType ?? ab.usage_type);
+    const abIsp = (ab.isp ?? ab.provider);
+
+    document.getElementById("pgAbScore").textContent = (abScore === undefined || abScore === null) ? "—" : `${abScore}`;
+    document.getElementById("pgAbReports").textContent = (abReports === undefined || abReports === null) ? "—" : `${abReports}`;
+    document.getElementById("pgAbLast").textContent = fmtDate(abLast);
+    document.getElementById("pgAbUsage").textContent = abUsage ? String(abUsage) : "—";
+    document.getElementById("pgAbIsp").textContent = abIsp ? String(abIsp) : "—";
+
+    let abVerd = "CLEAN";
+    const abScoreN = Number(abScore);
+    const abReportsN = Number(abReports);
+    if(Number.isFinite(abScoreN) && abScoreN >= 50) abVerd = "REPORTED";
+    else if(Number.isFinite(abReportsN) && abReportsN >= 20) abVerd = "REPORTED";
+    document.getElementById("pgAbPillBtn").textContent = abVerd;
+
+    // VirusTotal
+    const stats = vt.last_analysis_stats || vt.stats || {};
+    const mal = Number(stats.malicious ?? vt.malicious ?? 0);
+    const susp = Number(stats.suspicious ?? vt.suspicious ?? 0);
+    const harmless = Number(stats.harmless ?? vt.harmless ?? 0);
+    const total = Number((stats.harmless ?? 0) + (stats.malicious ?? 0) + (stats.suspicious ?? 0) + Number(stats.undetected ?? 0) + Number(stats.timeout ?? 0));
+    const engines = total > 0 ? total : (Number(vt.total_engines) || "—");
+
+    document.getElementById("pgVtMal").textContent = (engines === "—") ? `${mal}` : `${mal} / ${engines}`;
+    document.getElementById("pgVtSusp").textContent = `${susp}`;
+    document.getElementById("pgVtHarmless").textContent = `${harmless}`;
+
+    const repScore = (vt.reputation !== undefined && vt.reputation !== null) ? vt.reputation : (vt.reputation_score !== undefined ? vt.reputation_score : "—");
+    document.getElementById("pgVtRepPill").textContent = `REPUTATION SCORE: ${repScore}`;
+
+    // IPinfo
+    const city = info.city || "—";
+    const region = info.region || "";
+    const org = info.org || info.isp || "—";
+    const asn = info.asn || (typeof info.org === "string" && info.org.match(/AS\d+/) ? info.org.match(/AS\d+/)[0] : "");
+    const hostType = info.hosting_type || info.hostingType || info.usageType || "—";
+
+    document.getElementById("pgInfoLoc").textContent = (cc ? `${flag ? flag + " " : ""}${cName}` : "—");
+    document.getElementById("pgInfoCity").textContent = region ? `City: ${city}, ${region}` : `City: ${city}`;
+    document.getElementById("pgInfoIsp").textContent = `ISP: ${String(org || "—")}`;
+    document.getElementById("pgInfoAsn").textContent = `ASN: ${asn ? String(asn) : "—"}`;
+    document.getElementById("pgInfoHost").textContent = `Hosting Type: ${hostType ? String(hostType) : "—"}`;
+
+  } catch(e){
+    pgIpShowAlert("Lookup failed.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "SCAN";
+  }
+}
+
+pgIpPaintQuickStatus();
+</script>

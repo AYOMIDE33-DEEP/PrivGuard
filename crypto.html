@@ -1,0 +1,1083 @@
+<!-- tools/crypto.html -->
+
+<div class="card crypto-card" style="max-width:1300px;">
+  <div class="topbar">
+    <div>
+      <h2 class="h2">File Encryption &amp; Decryption (AES-256)</h2>
+      <div class="muted">Neon-grade UI + AES-GCM encryption. Encrypted files can be random-named for privacy.</div>
+    </div>
+    <div class="top-actions">
+      <button class="btn" type="button" id="cryptoResetBtn">Reset</button>
+    </div>
+  </div>
+
+  <div id="cryptoToast" class="toast" style="display:none;"></div>
+
+  <div class="crypto-grid">
+    <!-- ENCRYPT -->
+    <section class="pg-window blue" id="encPanel">
+      <div class="pg-titlebar bluebar">
+        <div class="pg-title">
+          <span class="pg-lock">🔒</span>
+          <span>Encrypt File</span>
+        </div>
+        <button class="pg-x bluex" type="button" title="Close" data-close-panel="encPanel">✕</button>
+      </div>
+
+      <div class="pg-body">
+        <div class="pg-filebox bluebox">
+          <div class="pg-doc">📄</div>
+          <div class="pg-filemeta">
+            <div class="pg-fname" id="encFileName">No file selected</div>
+            <div class="pg-fsize" id="encFileSize">Size: -</div>
+            <div class="pg-labelline" id="encLabelLine" style="display:none;"></div>
+          </div>
+        </div>
+
+        <div class="pg-field">
+          <div class="pg-lbl">Select file</div>
+          <input id="encFile" type="file" class="pg-input file" />
+        </div>
+
+        <div class="pg-field">
+          <div class="pg-lbl">Label <span class="tiny-muted">(recommended)</span></div>
+          <input id="encLabel" class="pg-input" placeholder="e.g. Feb payroll" maxlength="80" />
+          <div class="tiny-muted">Stored in encrypted metadata and visible only after password verification.</div>
+        </div>
+
+        <div class="pg-field">
+          <div class="pg-lbl">Note <span class="tiny-muted">(optional)</span></div>
+          <input id="encNote" class="pg-input" placeholder="e.g. for accounts" maxlength="160" />
+        </div>
+
+        <div class="pg-field">
+          <div class="pg-lbl">Encryption Password</div>
+          <div class="pg-row">
+            <div class="pg-mini">🔑</div>
+            <input id="encPass" type="password" class="pg-input" placeholder="Enter Password" autocomplete="new-password" />
+          </div>
+        </div>
+
+        <div class="pg-field">
+          <div class="pg-lbl">Confirm Password</div>
+          <div class="pg-row">
+            <div class="pg-mini">🔑</div>
+            <input id="encPass2" type="password" class="pg-input" placeholder="Re-enter Password" autocomplete="new-password" />
+          </div>
+        </div>
+
+        <div class="pg-field">
+          <div class="pg-lbl">Encryption Algorithm</div>
+          <div class="pg-row">
+            <select class="pg-input" disabled>
+              <option selected>AES-256</option>
+            </select>
+            <div class="pg-dd">▾</div>
+          </div>
+        </div>
+
+        <div class="pg-checks">
+          <label class="pg-chk"><input id="encShow" type="checkbox" /> <span>Show Password</span></label>
+          <label class="pg-chk"><input id="encNames" type="checkbox" checked /> <span>Encrypt File Names</span></label>
+          <label class="pg-chk"><input id="encSecureDelete" type="checkbox" /> <span>Enable Secure Delete</span></label>
+          <div class="tiny-muted">
+            If enabled, the downloaded encrypted file name becomes random to reduce filename leakage.
+          </div>
+        </div>
+
+        <div id="encValidationBox" class="pg-preview-out warnbox" style="display:none; margin-top:12px;"></div>
+
+        <div id="encDownloadWrap" class="pg-preview-out" style="display:none; margin-top:12px;">
+          <div style="font-weight:900; margin-bottom:8px;">✅ Encryption ready</div>
+          <a id="encDownloadLink" class="pg-btn mini bluebtn" href="#" download style="display:inline-block; text-decoration:none;">
+            Download Encrypted File
+          </a>
+        </div>
+      </div>
+
+      <div class="pg-progress blueprog">
+        <div class="pg-prow">
+          <div id="encProgLabel" class="pg-plabel">Idle</div>
+          <div id="encProgPct" class="pg-ppct">0%</div>
+        </div>
+        <div class="pg-bar">
+          <div id="encProgFill" class="pg-fill"></div>
+        </div>
+        <div id="encStatus" class="pg-pstatus">Waiting…</div>
+      </div>
+
+      <div class="pg-actions">
+        <button class="pg-btn ghost" type="button" id="encCancel" disabled>Cancel</button>
+        <button class="pg-btn primary bluebtn" type="button" id="encRun">Encrypt</button>
+      </div>
+    </section>
+
+    <!-- DECRYPT -->
+    <section class="pg-window green" id="decPanel">
+      <div class="pg-titlebar greenbar">
+        <div class="pg-title">
+          <span class="pg-lock">🔓</span>
+          <span>Decrypt File</span>
+        </div>
+        <button class="pg-x greenx" type="button" title="Close" data-close-panel="decPanel">✕</button>
+      </div>
+
+      <div class="pg-body">
+        <div class="pg-filebox greenbox">
+          <div class="pg-doc">📄</div>
+          <div class="pg-filemeta">
+            <div class="pg-fname" id="decFileName">No file selected</div>
+            <div class="pg-fsize" id="decFileSize">Size: -</div>
+          </div>
+        </div>
+
+        <div class="pg-field">
+          <div class="pg-lbl">Select file</div>
+          <input id="decFile" type="file" class="pg-input file" />
+        </div>
+
+        <div class="pg-field">
+          <div class="pg-lbl">Decryption Password</div>
+          <div class="pg-row">
+            <div class="pg-mini">🔑</div>
+            <input id="decPass" type="password" class="pg-input" placeholder="Enter Password" autocomplete="current-password" />
+          </div>
+        </div>
+
+        <div class="pg-checks">
+          <label class="pg-chk"><input id="decShow" type="checkbox" /> <span>Show Password</span></label>
+          <label class="pg-chk"><input id="decHint" type="checkbox" /> <span>Use Password Hint</span></label>
+
+          <div class="pg-preview">
+            <button class="pg-btn mini greenbtn" type="button" id="decPreviewBtn">Preview</button>
+            <div class="tiny-muted">Shows label and original name only after the correct password is entered.</div>
+          </div>
+
+          <div id="decValidationBox" class="pg-preview-out warnbox" style="display:none;"></div>
+          <div id="decPreviewOut" class="pg-preview-out" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="pg-progress greenprog">
+        <div class="pg-prow">
+          <div id="decProgLabel" class="pg-plabel">Idle</div>
+          <div id="decProgPct" class="pg-ppct">0%</div>
+        </div>
+        <div class="pg-bar">
+          <div id="decProgFill" class="pg-fill"></div>
+        </div>
+        <div id="decStatus" class="pg-pstatus">Waiting…</div>
+      </div>
+
+      <div class="pg-actions">
+        <button class="pg-btn ghost" type="button" id="decCancel" disabled>Cancel</button>
+        <button class="pg-btn primary greenbtn" type="button" id="decRun">Decrypt</button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<style>
+.crypto-card,
+.crypto-card * { box-sizing: border-box; }
+
+.crypto-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  margin-top: 14px;
+  width: 100%;
+  min-width: 0;
+  align-items: start;
+}
+
+.pg-window {
+  position: relative;
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(10,15,25,.95), rgba(5,8,15,.98));
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 25px 80px rgba(0,0,0,.65);
+  min-width: 0;
+}
+.pg-window.blue {
+  box-shadow: 0 25px 80px rgba(0,0,0,.65), 0 0 35px rgba(0,245,255,.10);
+  border-color: rgba(0,245,255,.22);
+}
+.pg-window.green {
+  box-shadow: 0 25px 80px rgba(0,0,0,.65), 0 0 35px rgba(50,255,120,.10);
+  border-color: rgba(50,255,120,.22);
+}
+
+.pg-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.pg-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 1000;
+  letter-spacing: .6px;
+  font-size: 20px;
+  min-width: 0;
+  line-height: 1.2;
+}
+.bluebar { background: linear-gradient(180deg, rgba(0,245,255,.15), rgba(0,0,0,0)); }
+.greenbar { background: linear-gradient(180deg, rgba(50,255,120,.15), rgba(0,0,0,0)); }
+
+.pg-x {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.35);
+  color: rgba(225,235,255,.95);
+  cursor: pointer;
+  font-weight: 1000;
+  flex: 0 0 42px;
+}
+.bluex { box-shadow: 0 0 0 1px rgba(0,245,255,.14) inset; }
+.greenx { box-shadow: 0 0 0 1px rgba(50,255,120,.14) inset; }
+
+.pg-body { padding: 16px; }
+.pg-filebox {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.26);
+  margin-bottom: 14px;
+  min-width: 0;
+}
+.pg-doc {
+  flex: 0 0 auto;
+  font-size: 28px;
+}
+.pg-filemeta { flex: 1; min-width: 0; }
+.pg-fname {
+  font-weight: 1000;
+  font-size: 16px;
+  word-break: break-word;
+}
+.pg-fsize {
+  margin-top: 2px;
+  font-size: 12px;
+  color: rgba(142,162,214,.95);
+}
+.pg-labelline {
+  margin-top: 6px;
+  font-size: 12px;
+  color: rgba(215,224,255,.92);
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.22);
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.pg-field { margin-bottom: 12px; }
+.pg-lbl {
+  font-weight: 900;
+  margin-bottom: 6px;
+  color: rgba(215,224,255,.92);
+}
+.pg-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  min-width: 0;
+}
+.pg-mini {
+  width: 40px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.25);
+  flex: 0 0 40px;
+}
+.pg-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.35);
+  color: rgba(225,235,255,.96);
+  outline: none;
+  min-width: 0;
+  font: inherit;
+}
+.pg-input.file {
+  cursor: pointer;
+}
+.pg-dd {
+  position: absolute;
+  right: 18px;
+  opacity: .7;
+  pointer-events: none;
+}
+
+.pg-checks {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pg-chk {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: rgba(215,224,255,.92);
+}
+.pg-chk input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+}
+
+.pg-progress {
+  padding: 14px 16px;
+  border-top: 1px dashed rgba(255,255,255,.10);
+  background: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,.16));
+}
+.pg-prow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.pg-plabel {
+  font-weight: 1000;
+  min-width: 0;
+}
+.pg-ppct {
+  font-weight: 1000;
+  color: rgba(142,162,214,.95);
+  flex: 0 0 auto;
+}
+
+.pg-bar {
+  height: 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.35);
+  overflow: hidden;
+}
+.pg-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  transition: width .25s ease;
+  position: relative;
+  overflow: hidden;
+}
+.blueprog .pg-fill {
+  background: linear-gradient(90deg, #00eaff, #00f5ff);
+  box-shadow: 0 0 20px rgba(0,245,255,.35);
+}
+.greenprog .pg-fill {
+  background: linear-gradient(90deg, #2eff88, #32ff78);
+  box-shadow: 0 0 20px rgba(50,255,120,.35);
+}
+.pg-pstatus {
+  margin-top: 8px;
+  font-weight: 900;
+  color: rgba(215,224,255,.88);
+  min-height: 20px;
+  word-break: break-word;
+}
+
+.pg-actions {
+  display: flex;
+  gap: 12px;
+  padding: 0 16px 16px;
+  flex-wrap: wrap;
+}
+.pg-btn {
+  flex: 1 1 220px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.35);
+  color: rgba(225,235,255,.96);
+  cursor: pointer;
+  font-weight: 1000;
+  letter-spacing: .4px;
+  text-align: center;
+}
+.pg-btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+.bluebtn {
+  box-shadow: 0 0 0 1px rgba(0,245,255,.16) inset;
+  border-color: rgba(0,245,255,.22);
+}
+.greenbtn {
+  box-shadow: 0 0 0 1px rgba(50,255,120,.16) inset;
+  border-color: rgba(50,255,120,.22);
+}
+
+.toast {
+  position: fixed;
+  right: 20px;
+  bottom: 22px;
+  max-width: min(90vw, 360px);
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.60);
+  color: rgba(225,235,255,.96);
+  box-shadow: 0 18px 70px rgba(0,0,0,.55);
+  z-index: 9999;
+  pointer-events: none;
+}
+.toast.ok { border-color: rgba(0,255,170,.24); }
+.toast.bad { border-color: rgba(255,70,70,.28); }
+.toast.warn { border-color: rgba(255,200,80,.28); }
+
+.tiny-muted {
+  color: rgba(142,162,214,.95);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.pg-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.pg-btn.mini {
+  width: auto;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  min-width: 120px;
+  padding: 10px 14px;
+  display: inline-block;
+}
+.pg-preview-out {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.22);
+  color: rgba(215,224,255,.92);
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+.warnbox {
+  border-color: rgba(255,170,70,.25);
+  background: rgba(80,40,0,.18);
+}
+
+/* tablet */
+@media (max-width: 980px) {
+  .crypto-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* small tablet / large phone */
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px;
+  }
+
+  .top-actions,
+  .top-actions .btn {
+    width: 100%;
+  }
+
+  .pg-title {
+    font-size: 18px;
+  }
+
+  .pg-body,
+  .pg-progress,
+  .pg-actions {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .pg-actions {
+    flex-direction: column;
+  }
+
+  .pg-btn {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+
+  .pg-btn.mini {
+    width: auto;
+    min-width: 120px;
+  }
+}
+
+/* phone */
+@media (max-width: 560px) {
+  .crypto-card {
+    border-radius: 14px;
+  }
+
+  .pg-window {
+    border-radius: 14px;
+  }
+
+  .pg-titlebar {
+    padding: 12px;
+  }
+
+  .pg-title {
+    font-size: 16px;
+    gap: 8px;
+  }
+
+  .pg-x {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+  }
+
+  .pg-body {
+    padding: 12px;
+  }
+
+  .pg-progress {
+    padding: 12px;
+  }
+
+  .pg-actions {
+    padding: 0 12px 12px;
+  }
+
+  .pg-filebox {
+    align-items: flex-start;
+  }
+
+  .pg-doc {
+    font-size: 24px;
+  }
+
+  .pg-row {
+    gap: 8px;
+  }
+
+  .pg-mini {
+    width: 38px;
+    height: 42px;
+    flex: 0 0 38px;
+  }
+
+  .pg-input {
+    padding: 11px;
+    font-size: 14px;
+  }
+
+  .pg-bar {
+    height: 14px;
+  }
+
+  .pg-prow {
+    align-items: flex-start;
+  }
+
+  .pg-plabel,
+  .pg-ppct {
+    font-size: 14px;
+  }
+
+  .pg-pstatus {
+    font-size: 13px;
+  }
+
+  .toast {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    max-width: none;
+  }
+}
+</style>
+
+<script>
+(function () {
+  const root = document.querySelector(".crypto-card");
+  if (!root) return;
+  if (root.dataset.cryptoInit === "1") return;
+  root.dataset.cryptoInit = "1";
+
+  const q = (id) => root.querySelector("#" + id);
+
+  const state = {
+    encJobId: null,
+    encPoll: null,
+    busyEnc: false,
+    busyDec: false
+  };
+
+  function toast(msg, kind) {
+    const el = q("cryptoToast");
+    if (!el) return;
+    el.className = "toast " + (kind || "ok");
+    el.textContent = msg;
+    el.style.display = "block";
+    clearTimeout(el.__hideTimer);
+    el.__hideTimer = setTimeout(() => { el.style.display = "none"; }, 3200);
+  }
+
+  function fmtBytes(n) {
+    const x = Number(n || 0);
+    if (!x) return "-";
+    const units = ["B","KB","MB","GB","TB"];
+    let i = 0, v = x;
+    while (v >= 1024 && i < units.length - 1) {
+      v /= 1024;
+      i++;
+    }
+    return `${v.toFixed(i === 0 ? 0 : 1)} ${units[i]}`;
+  }
+
+  function setEncProgress(pct, label, status) {
+    pct = Math.max(0, Math.min(100, Number(pct || 0)));
+    q("encProgFill").style.width = pct + "%";
+    q("encProgPct").textContent = pct + "%";
+    q("encProgLabel").textContent = label || "Idle";
+    q("encStatus").textContent = status || "Waiting…";
+  }
+
+  function setDecProgress(pct, label, status) {
+    pct = Math.max(0, Math.min(100, Number(pct || 0)));
+    q("decProgFill").style.width = pct + "%";
+    q("decProgPct").textContent = pct + "%";
+    q("decProgLabel").textContent = label || "Idle";
+    q("decStatus").textContent = status || "Waiting…";
+  }
+
+  function setEncBusy(on) {
+    state.busyEnc = !!on;
+    ["encFile","encLabel","encNote","encPass","encPass2","encShow","encNames","encSecureDelete","encRun"].forEach(id => {
+      const el = q(id);
+      if (el) el.disabled = !!on;
+    });
+    q("encCancel").disabled = !on;
+  }
+
+  function setDecBusy(on) {
+    state.busyDec = !!on;
+    ["decFile","decPass","decShow","decHint","decPreviewBtn","decRun"].forEach(id => {
+      const el = q(id);
+      if (el) el.disabled = !!on;
+    });
+    q("decCancel").disabled = !on;
+  }
+
+  function stopEncPoll() {
+    if (state.encPoll) {
+      clearInterval(state.encPoll);
+      state.encPoll = null;
+    }
+  }
+
+  function showEncValidation(msg) {
+    const box = q("encValidationBox");
+    if (!box) return;
+    box.textContent = msg || "";
+    box.style.display = msg ? "block" : "none";
+  }
+
+  function showDecValidation(msg) {
+    const box = q("decValidationBox");
+    if (!box) return;
+    box.textContent = msg || "";
+    box.style.display = msg ? "block" : "none";
+  }
+
+  function updateFileMeta(inputId, nameId, sizeId) {
+    const inp = q(inputId);
+    const file = inp && inp.files && inp.files[0];
+    q(nameId).textContent = file ? file.name : "No file selected";
+    q(sizeId).textContent = "Size: " + (file ? fmtBytes(file.size) : "-");
+  }
+
+  function bindToggle(chkId, targetIds) {
+    const chk = q(chkId);
+    if (!chk) return;
+    chk.addEventListener("change", function () {
+      targetIds.forEach(id => {
+        const el = q(id);
+        if (el) el.type = chk.checked ? "text" : "password";
+      });
+    });
+  }
+
+  async function pollEncJob() {
+    if (!state.encJobId) return;
+
+    try {
+      const r = await fetch("/api/crypto/job/" + encodeURIComponent(state.encJobId));
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "Job status failed");
+
+      setEncProgress(j.progress || 0, j.stage || "Working…", j.message || "Processing…");
+
+      if (j.status === "done") {
+        stopEncPoll();
+        setEncBusy(false);
+        setEncProgress(100, "Encryption complete", "Ready to download.");
+
+        const wrap = q("encDownloadWrap");
+        const link = q("encDownloadLink");
+        if (wrap && link) {
+          link.href = "/api/crypto/download/" + encodeURIComponent(state.encJobId);
+          wrap.style.display = "block";
+        }
+
+        toast("Encryption finished. Click Download.", "ok");
+      }
+
+      if (j.status === "error") {
+        stopEncPoll();
+        setEncBusy(false);
+        setEncProgress(0, "Error", "Encryption failed.");
+        showEncValidation(j.error || "Encryption failed.");
+        toast(j.error || "Encryption failed.", "bad");
+      }
+
+      if (j.status === "cancelled") {
+        stopEncPoll();
+        setEncBusy(false);
+        setEncProgress(0, "Cancelled", "Cancelled.");
+        showEncValidation("Encryption was cancelled.");
+        toast("Cancelled.", "warn");
+      }
+    } catch (e) {
+      stopEncPoll();
+      setEncBusy(false);
+      setEncProgress(0, "Error", "Encryption failed.");
+      showEncValidation(String(e.message || "Encryption failed."));
+      toast(String(e.message || "Encryption failed."), "bad");
+      console.error("POLL ERROR:", e);
+    }
+  }
+
+  async function startEncrypt() {
+    if (state.busyEnc) return;
+
+    const fileInput = q("encFile");
+    const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+    const pass1 = (q("encPass")?.value || "").trim();
+    const pass2 = (q("encPass2")?.value || "").trim();
+    const label = (q("encLabel")?.value || "").trim();
+    const note = (q("encNote")?.value || "").trim();
+    const encryptNames = !!q("encNames")?.checked;
+
+    showEncValidation("");
+    q("encDownloadWrap").style.display = "none";
+    q("encDownloadLink").href = "#";
+
+    if (!file) {
+      setEncProgress(0, "Validation failed", "No file selected.");
+      showEncValidation("Select a file to encrypt.");
+      return toast("Select a file to encrypt.", "bad");
+    }
+
+    if (!pass1) {
+      setEncProgress(0, "Validation failed", "Password is required.");
+      showEncValidation("Enter an encryption password.");
+      return toast("Enter an encryption password.", "bad");
+    }
+
+    if (pass1.length < 6) {
+      setEncProgress(0, "Validation failed", "Password must be at least 6 characters.");
+      showEncValidation("Use at least 6 characters for the encryption password.");
+      return toast("Use at least 6 characters.", "bad");
+    }
+
+    if (!pass2) {
+      setEncProgress(0, "Validation failed", "Confirm password is required.");
+      showEncValidation("Confirm the encryption password.");
+      return toast("Confirm the encryption password.", "bad");
+    }
+
+    if (pass1 !== pass2) {
+      setEncProgress(0, "Validation failed", "Passwords do not match.");
+      showEncValidation("Passwords do not match.");
+      return toast("Passwords do not match.", "bad");
+    }
+
+    const labelLine = q("encLabelLine");
+    if (labelLine) {
+      if (label) {
+        labelLine.style.display = "inline-flex";
+        labelLine.textContent = "🏷 " + label;
+      } else {
+        labelLine.style.display = "none";
+        labelLine.textContent = "";
+      }
+    }
+
+    setEncBusy(true);
+    setEncProgress(5, "Starting…", "Uploading file…");
+
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("password", pass1);
+    fd.append("label", label);
+    fd.append("note", note);
+    fd.append("encrypt_names", encryptNames ? "1" : "0");
+
+    try {
+      const r = await fetch("/api/crypto/encrypt/start", {
+        method: "POST",
+        body: fd
+      });
+
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j.error || "Start failed");
+
+      state.encJobId = j.job_id;
+      setEncProgress(10, "Queued…", "Encryption job started.");
+      toast("Encryption started.", "ok");
+
+      stopEncPoll();
+      state.encPoll = setInterval(pollEncJob, 700);
+      pollEncJob();
+    } catch (e) {
+      setEncBusy(false);
+      setEncProgress(0, "Error", "Encryption failed.");
+      showEncValidation(String(e.message || "Encryption failed."));
+      toast(String(e.message || "Encryption failed."), "bad");
+      console.error("START ENCRYPT ERROR:", e);
+    }
+  }
+
+  async function cancelEncrypt() {
+    if (!state.encJobId) return;
+    try {
+      await fetch("/api/crypto/cancel/" + encodeURIComponent(state.encJobId), { method: "POST" });
+    } catch (e) {
+      console.error("CANCEL ERROR:", e);
+    }
+  }
+
+  async function downloadBlobResponse(resp, fallbackName) {
+    const blob = await resp.blob();
+    const cd = resp.headers.get("Content-Disposition") || "";
+    const m = /filename\*=UTF-8''([^;]+)|filename="([^"]+)"|filename=([^;]+)/i.exec(cd);
+
+    let name = fallbackName || "download.bin";
+    try {
+      const picked = (m && (m[1] || m[2] || m[3]) || "").trim();
+      if (picked) name = decodeURIComponent(picked);
+    } catch {}
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  async function doDecrypt() {
+    if (state.busyDec) return;
+
+    const file = q("decFile")?.files?.[0];
+    const pass = (q("decPass")?.value || "").trim();
+
+    showDecValidation("");
+
+    if (!file) {
+      setDecProgress(0, "Validation failed", "No file selected.");
+      showDecValidation("Select an encrypted file to decrypt.");
+      return toast("Select a file to decrypt.", "bad");
+    }
+
+    if (!pass) {
+      setDecProgress(0, "Validation failed", "Password is required.");
+      showDecValidation("Enter the decryption password.");
+      return toast("Enter the decryption password.", "bad");
+    }
+
+    if (pass.length < 6) {
+      setDecProgress(0, "Validation failed", "Password must be at least 6 characters.");
+      showDecValidation("Use at least 6 characters for the decryption password.");
+      return toast("Use at least 6 characters.", "bad");
+    }
+
+    setDecBusy(true);
+    setDecProgress(10, "Starting…", "Decrypting…");
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("password", pass);
+
+      const resp = await fetch("/api/crypto/decrypt", { method: "POST", body: fd });
+      if (!resp.ok) {
+        const j = await resp.json().catch(() => ({}));
+        throw new Error(j.error || "Decryption failed.");
+      }
+
+      setDecProgress(100, "Done", "Download started.");
+      await downloadBlobResponse(resp, "decrypted_file");
+      toast("Decrypted. Download started.", "ok");
+    } catch (e) {
+      setDecProgress(0, "Error", "Decryption failed.");
+      showDecValidation(String(e.message || "Decryption failed."));
+      toast(String(e.message || "Decryption failed."), "bad");
+      console.error("DECRYPT ERROR:", e);
+    } finally {
+      setDecBusy(false);
+    }
+  }
+
+  async function previewLabel() {
+    const file = q("decFile")?.files?.[0];
+    const pass = (q("decPass")?.value || "").trim();
+    const out = q("decPreviewOut");
+
+    if (out) {
+      out.style.display = "none";
+      out.innerHTML = "";
+    }
+    showDecValidation("");
+
+    if (!file) {
+      setDecProgress(0, "Validation failed", "No file selected.");
+      showDecValidation("Select an encrypted file first.");
+      return toast("Select an encrypted file first.", "bad");
+    }
+
+    if (!pass) {
+      setDecProgress(0, "Validation failed", "Password is required.");
+      showDecValidation("Enter the password to preview metadata.");
+      return toast("Enter the password to preview metadata.", "bad");
+    }
+
+    if (pass.length < 6) {
+      setDecProgress(0, "Validation failed", "Password must be at least 6 characters.");
+      showDecValidation("Use at least 6 characters for the preview password.");
+      return toast("Use at least 6 characters.", "bad");
+    }
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("password", pass);
+
+      const resp = await fetch("/api/crypto/peek", { method: "POST", body: fd });
+      const j = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(j.error || "Preview failed.");
+
+      const label = (j.label || "").trim();
+      const original = (j.original_name || "").trim();
+      const note = (j.note || "").trim();
+      const created = (j.created_utc || "").trim();
+
+      let content = "";
+      if (label) content += `🏷 Label: <b>${label.replace(/</g, "&lt;")}</b><br>`;
+      if (original) content += `📄 Original: <b>${original.replace(/</g, "&lt;")}</b><br>`;
+      if (note) content += `📝 Note: ${note.replace(/</g, "&lt;")}<br>`;
+      if (created) content += `🕒 Created: ${created.replace(/</g, "&lt;")}`;
+
+      if (out) {
+        out.innerHTML = content || "No metadata found.";
+        out.style.display = "block";
+      }
+      toast("Preview ready.", "ok");
+    } catch (e) {
+      showDecValidation(String(e.message || "Preview failed."));
+      toast(String(e.message || "Preview failed."), "bad");
+      console.error("PREVIEW ERROR:", e);
+    }
+  }
+
+  function resetAll() {
+    stopEncPoll();
+    state.encJobId = null;
+
+    setEncBusy(false);
+    setDecBusy(false);
+
+    setEncProgress(0, "Idle", "Waiting…");
+    setDecProgress(0, "Idle", "Waiting…");
+
+    showEncValidation("");
+    showDecValidation("");
+    q("encDownloadWrap").style.display = "none";
+    q("encDownloadLink").href = "#";
+
+    ["encFile","encLabel","encNote","encPass","encPass2","decFile","decPass"].forEach(id => {
+      const el = q(id);
+      if (el) el.value = "";
+    });
+
+    q("encShow").checked = false;
+    q("encNames").checked = true;
+    q("encSecureDelete").checked = false;
+    q("decShow").checked = false;
+    q("decHint").checked = false;
+
+    q("encPass").type = "password";
+    q("encPass2").type = "password";
+    q("decPass").type = "password";
+
+    q("encFileName").textContent = "No file selected";
+    q("encFileSize").textContent = "Size: -";
+    q("decFileName").textContent = "No file selected";
+    q("decFileSize").textContent = "Size: -";
+
+    q("encLabelLine").style.display = "none";
+    q("encLabelLine").textContent = "";
+
+    q("decPreviewOut").style.display = "none";
+    q("decPreviewOut").innerHTML = "";
+  }
+
+  q("cryptoResetBtn").addEventListener("click", resetAll);
+  q("encRun").addEventListener("click", startEncrypt);
+  q("encCancel").addEventListener("click", cancelEncrypt);
+  q("decRun").addEventListener("click", doDecrypt);
+  q("decPreviewBtn").addEventListener("click", previewLabel);
+
+  q("encFile").addEventListener("change", () => updateFileMeta("encFile", "encFileName", "encFileSize"));
+  q("decFile").addEventListener("change", () => updateFileMeta("decFile", "decFileName", "decFileSize"));
+
+  bindToggle("encShow", ["encPass", "encPass2"]);
+  bindToggle("decShow", ["decPass"]);
+
+  root.querySelectorAll("[data-close-panel]").forEach(btn => {
+    btn.addEventListener("click", function () {
+      const pid = this.getAttribute("data-close-panel");
+      const panel = q(pid);
+      if (panel) panel.style.display = "none";
+      toast("Panel closed. Click Reset to bring it back.", "warn");
+    });
+  });
+
+  resetAll();
+})();
+</script>

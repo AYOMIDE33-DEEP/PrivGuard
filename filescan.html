@@ -1,0 +1,641 @@
+<!-- tools/filescan.html -->
+<div class="card" style="max-width:1600px;">
+  <div class="topbar">
+    <div>
+      <h2 class="h2">Quick File Scanner</h2>
+      <div class="muted">
+        Upload a file for secure server-side analysis. The risk score and ring use <b>data.report.score</b> only.
+      </div>
+    </div>
+    <div class="top-actions" style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-ghost" id="qfsRescanBtn" onclick="qfsRescan()" disabled>RESCAN</button>
+      <button class="btn btn-ghost" id="qfsClearBtn" onclick="qfsReset()">CLEAR</button>
+    </div>
+  </div>
+
+  <!-- Banner (malicious/suspicious/safe) -->
+  <div id="qfsBanner" class="out" style="display:none; margin-top:12px;"></div>
+
+  <div class="grid-3" style="margin-top:14px;">
+    <!-- LEFT: Upload + File Info -->
+    <div class="panelcard">
+      <div class="panelcard-h">Upload</div>
+      <div class="panelcard-s">Drag & drop or select a file. Max 25MB.</div>
+
+      <div id="qfsAlert" class="out" style="display:none; margin-top:12px;"></div>
+
+      <div id="qfsDrop" class="qfs-drop" style="margin-top:12px;">
+        <div class="qfs-drop-title">Drop file here</div>
+        <div class="qfs-drop-sub">or</div>
+
+        <div class="row" style="justify-content:flex-start; gap:10px; margin-top:10px;">
+          <input id="qfsFile" type="file" class="input" style="padding:10px;" />
+          <button class="btn" id="qfsScanBtn" onclick="qfsScan()" style="min-width:140px;">SCAN</button>
+        </div>
+
+        <div class="tiny-muted" style="margin-top:10px; line-height:1.45;">
+          Supported:
+          <code>.exe</code> <code>.pdf</code> <code>.docx</code> <code>.xlsx</code> <code>.zip</code>
+          <code>.js</code> <code>.dll</code> <code>.bat</code> <code>.scr</code> <code>.rar</code>
+          <code>.png</code> <code>.jpg</code>
+          <br/>Max size: <b>25MB</b>
+        </div>
+
+        <div class="qfs-progress" style="margin-top:12px; display:none;" id="qfsProgressWrap">
+          <div class="qfs-progress-bar"><div id="qfsProgress"></div></div>
+          <div class="tiny-muted" id="qfsProgressText" style="margin-top:8px;">Uploading…</div>
+        </div>
+      </div>
+
+      <div class="panelcard" style="margin-top:12px; background: rgba(0,0,0,.14);">
+        <div class="panelcard-h">File Info</div>
+        <div class="kv" style="margin-top:10px;">
+          <div class="k">Name</div><div id="qfsName">—</div>
+          <div class="k">Size</div><div id="qfsSize">—</div>
+          <div class="k">Type</div><div id="qfsType">—</div>
+
+          <div class="k">SHA256</div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <span id="qfsSha" style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">—</span>
+            <button class="btn btn-ghost" style="padding:6px 10px;" onclick="qfsCopySha()" id="qfsCopyBtn" disabled>COPY</button>
+          </div>
+
+          <div class="k">Entropy</div>
+          <div>
+            <span id="qfsEntropyBadge" class="pill">—</span>
+            <span id="qfsEntropyHint" class="tiny-muted" style="margin-left:8px;"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panelcard" style="margin-top:12px;">
+        <div class="panelcard-h">Scan Status</div>
+        <div class="panelcard-s">Clean UI errors + timeout safety.</div>
+        <div class="kv" style="margin-top:10px;">
+          <div class="k">Scan duration</div><div id="qfsTime">—</div>
+          <div class="k">Last result</div><div id="qfsLast">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: Risk Ring -->
+    <div class="panelcard">
+      <div class="panelcard-h">Risk Score</div>
+      <div class="panelcard-s">Ring fill equals score percentage.</div>
+
+      <div class="qfs-ring-wrap" style="margin-top:12px;">
+        <svg class="qfs-ring" width="260" height="260" viewBox="0 0 260 260" aria-label="Risk score ring">
+          <defs>
+            <filter id="qfsGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <circle cx="130" cy="130" r="104" class="qfs-ring-bg"></circle>
+          <circle cx="130" cy="130" r="104" class="qfs-ring-fg" id="qfsRingFg"></circle>
+        </svg>
+
+        <div class="qfs-ring-center">
+          <div class="qfs-score" id="qfsScoreText">—</div>
+          <div class="qfs-score-sub">out of 100</div>
+          <div class="pill" id="qfsLabelPill" style="margin-top:10px;">—</div>
+        </div>
+      </div>
+
+      <div class="panelcard" style="margin-top:12px; background: rgba(0,0,0,.14);">
+        <div class="panelcard-h">Synchronization Rules</div>
+        <div class="panelcard-s">
+          Ring %, numeric score, label pill, colors, and warning indicators come from:
+          <code>data.report.score</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Threat Report -->
+    <div class="panelcard" id="qfsThreatPanel">
+      <div class="panelcard-h">Threat Report</div>
+      <div class="panelcard-s">SOC-style evidence and actionable guidance.</div>
+
+      <div class="panelcard" style="margin-top:12px; background: rgba(0,0,0,.14);">
+        <div class="kv">
+          <div class="k">Risk label</div><div id="qfsRiskLabel">—</div>
+          <div class="k">Verdict</div><div id="qfsVerdict">—</div>
+          <div class="k">Signature</div><div id="qfsSig">—</div>
+          <div class="k">Malware family</div><div id="qfsFamily">—</div>
+        </div>
+      </div>
+
+      <div class="panelcard" style="margin-top:12px;">
+        <div class="panelcard-h">Signals</div>
+        <div class="panelcard-s">Triggered intelligence lines.</div>
+        <ul id="qfsSignals" class="qfs-list" style="margin-top:10px;">
+          <li class="muted">No scan yet.</li>
+        </ul>
+      </div>
+
+      <div class="panelcard" style="margin-top:12px;">
+        <div class="panelcard-h">Recommendation</div>
+        <div class="panelcard-s">What to do next.</div>
+        <div id="qfsReco" class="out" style="margin-top:10px;">—</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* 3-column layout helper */
+.grid-3{
+  display:grid;
+  grid-template-columns: 1.05fr 0.9fr 1.05fr;
+  gap:14px;
+}
+@media (max-width: 1200px){
+  .grid-3{ grid-template-columns: 1fr; }
+}
+
+/* Dropzone */
+.qfs-drop{
+  border:1px dashed rgba(0,245,255,.28);
+  border-radius:16px;
+  padding:14px;
+  background: rgba(10,22,48,.18);
+}
+.qfs-drop.dragover{
+  border-color: rgba(0,245,255,.65);
+  background: rgba(0,245,255,.06);
+}
+.qfs-drop-title{
+  font-weight:1000;
+  letter-spacing:.4px;
+  color: rgba(215,224,255,.92);
+}
+.qfs-drop-sub{ margin-top:6px; color: var(--muted); }
+
+/* Progress */
+.qfs-progress-bar{
+  height:10px;
+  border-radius:999px;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(0,245,255,.16);
+  overflow:hidden;
+}
+.qfs-progress-bar > div{
+  height:100%;
+  width:0%;
+  background: rgba(0,245,255,.55);
+  transition: width .2s ease;
+}
+
+/* Ring */
+.qfs-ring-wrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:320px;
+}
+.qfs-ring-bg{
+  fill:none;
+  stroke: rgba(255,255,255,.08);
+  stroke-width: 18;
+}
+.qfs-ring-fg{
+  fill:none;
+  stroke: rgba(0,245,255,.55);
+  stroke-width: 18;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 130px 130px;
+  filter: url(#qfsGlow);
+  stroke-dasharray: 653.45;
+  stroke-dashoffset: 653.45;
+  transition: stroke-dashoffset .35s ease, stroke .2s ease;
+}
+.qfs-ring-center{
+  position:absolute;
+  text-align:center;
+}
+.qfs-score{
+  font-size: 44px;
+  font-weight: 1100;
+  letter-spacing:.5px;
+}
+.qfs-score-sub{
+  margin-top:4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* List */
+.qfs-list{
+  list-style:none;
+  padding-left:0;
+  margin:0;
+}
+.qfs-list li{
+  border:1px solid rgba(0,245,255,.14);
+  background: rgba(10,22,48,.22);
+  border-radius:12px;
+  padding:10px 12px;
+  margin-top:8px;
+  color: rgba(215,224,255,.90);
+}
+</style>
+
+<script>
+/* -------------------------
+   Quick File Scanner (SOC UI)
+   Endpoint: POST /api/file/scan (multipart/form-data)
+------------------------- */
+
+const QFS_MAX_BYTES = 25 * 1024 * 1024;
+const QFS_ALLOWED = new Set(["exe","pdf","docx","xlsx","zip","js","dll","bat","scr","rar","png","jpg"]);
+
+let qfsLastFile = null;
+let qfsLastSha = "";
+
+function qfsAlert(msg, kind="danger"){
+  const el = document.getElementById("qfsAlert");
+  el.style.display = "block";
+  el.style.borderColor = kind === "danger" ? "rgba(255,72,99,.55)" : "rgba(0,245,255,.22)";
+  el.style.background = kind === "danger" ? "rgba(255,72,99,.08)" : "rgba(0,0,0,.14)";
+  el.style.color = "rgba(215,224,255,.92)";
+  el.textContent = msg;
+}
+
+function qfsClearAlert(){
+  const el = document.getElementById("qfsAlert");
+  el.style.display = "none";
+  el.textContent = "";
+}
+
+function qfsSetBanner(state, text){
+  const b = document.getElementById("qfsBanner");
+  if (!state){
+    b.style.display = "none";
+    b.textContent = "";
+    return;
+  }
+  b.style.display = "block";
+  b.style.color = "rgba(215,224,255,.95)";
+
+  if (state === "malicious"){
+    b.style.borderColor = "rgba(255,72,99,.55)";
+    b.style.background = "rgba(255,72,99,.10)";
+    b.textContent = text || "Malicious File Detected";
+  } else if (state === "suspicious"){
+    b.style.borderColor = "rgba(255,178,0,.55)";
+    b.style.background = "rgba(255,178,0,.10)";
+    b.textContent = text || "Suspicious File Detected";
+  } else {
+    b.style.borderColor = "rgba(0,245,140,.45)";
+    b.style.background = "rgba(0,245,140,.10)";
+    b.textContent = text || "No Known Threats Detected";
+  }
+}
+
+function qfsClearBanner(){
+  const b = document.getElementById("qfsBanner");
+  b.style.display = "none";
+  b.textContent = "";
+}
+
+function qfsPrettySize(bytes){
+  if (!Number.isFinite(bytes)) return "—";
+  const u = ["B","KB","MB","GB"];
+  let i = 0, v = bytes;
+  while (v >= 1024 && i < u.length - 1){ v /= 1024; i++; }
+  return (v < 10 ? v.toFixed(1) : Math.round(v)) + " " + u[i];
+}
+
+function qfsExtOf(name){
+  const m = (name || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+  return m ? m[1] : "";
+}
+
+function qfsClampScore(s){
+  s = Number(s);
+  if (!Number.isFinite(s)) return 0;
+  if (s < 0) return 0;
+  if (s > 100) return 100;
+  return Math.round(s);
+}
+
+function qfsColorByScore(score){
+  // 0–25 green, 26–50 yellow, 51–75 orange, 76–100 red
+  if (score <= 25) return { stroke: "rgba(0,245,140,.70)", pill: "rgba(0,245,140,.10)", border: "rgba(0,245,140,.45)" };
+  if (score <= 50) return { stroke: "rgba(255,230,80,.75)", pill: "rgba(255,230,80,.10)", border: "rgba(255,230,80,.45)" };
+  if (score <= 75) return { stroke: "rgba(255,178,0,.80)", pill: "rgba(255,178,0,.10)", border: "rgba(255,178,0,.45)" };
+  return { stroke: "rgba(255,72,99,.85)", pill: "rgba(255,72,99,.12)", border: "rgba(255,72,99,.55)" };
+}
+
+function qfsSetRing(score){
+  const s = qfsClampScore(score);
+  const r = 104;
+  const circumference = 2 * Math.PI * r;
+  const offset = circumference - (s/100) * circumference;
+
+  const fg = document.getElementById("qfsRingFg");
+  fg.style.strokeDasharray = `${circumference}`;
+  fg.style.strokeDashoffset = `${offset}`;
+
+  const c = qfsColorByScore(s);
+  fg.style.stroke = c.stroke;
+
+  document.getElementById("qfsScoreText").textContent = `${s}`;
+}
+
+function qfsSetLabel(label, score){
+  const pill = document.getElementById("qfsLabelPill");
+  const s = qfsClampScore(score);
+  const c = qfsColorByScore(s);
+  pill.textContent = String(label || "—");
+  pill.style.borderColor = c.border;
+  pill.style.background = c.pill;
+}
+
+function qfsSetEntropy(ent){
+  const badge = document.getElementById("qfsEntropyBadge");
+  const hint = document.getElementById("qfsEntropyHint");
+  const e = Number(ent);
+
+  if (!Number.isFinite(e)){
+    badge.textContent = "—";
+    hint.textContent = "";
+    badge.style.borderColor = "rgba(0,245,255,.18)";
+    badge.style.background = "rgba(10,22,48,.55)";
+    return;
+  }
+
+  badge.textContent = `${e}`;
+  if (e > 7.5){
+    badge.style.borderColor = "rgba(255,178,0,.55)";
+    badge.style.background = "rgba(255,178,0,.10)";
+    hint.textContent = "High entropy (possible packing/encryption)";
+  } else {
+    badge.style.borderColor = "rgba(0,245,255,.22)";
+    badge.style.background = "rgba(0,0,0,.14)";
+    hint.textContent = "Normal";
+  }
+}
+
+function qfsSetSignals(list){
+  const ul = document.getElementById("qfsSignals");
+  ul.innerHTML = "";
+  if (!Array.isArray(list) || list.length === 0){
+    ul.innerHTML = `<li class="muted">No signals reported.</li>`;
+    return;
+  }
+  list.forEach(x => {
+    const li = document.createElement("li");
+    li.textContent = String(x);
+    ul.appendChild(li);
+  });
+}
+
+function qfsCopySha(){
+  if (!qfsLastSha) return;
+  navigator.clipboard.writeText(qfsLastSha).then(() => {
+    qfsAlert("SHA256 copied.", "info");
+    setTimeout(qfsClearAlert, 1200);
+  }).catch(() => {
+    qfsAlert("Copy failed (clipboard blocked).", "danger");
+  });
+}
+
+function qfsRescan(){
+  if (!qfsLastFile){
+    qfsAlert("No previous file available to rescan.", "danger");
+    return;
+  }
+  qfsScan(qfsLastFile);
+}
+
+function qfsSetBusy(busy){
+  document.getElementById("qfsScanBtn").disabled = !!busy;
+  document.getElementById("qfsClearBtn").disabled = !!busy;
+  document.getElementById("qfsRescanBtn").disabled = !!busy || !qfsLastFile;
+}
+
+function qfsShowProgress(show, pct=0, text="Uploading…"){
+  const wrap = document.getElementById("qfsProgressWrap");
+  const bar = document.getElementById("qfsProgress");
+  const label = document.getElementById("qfsProgressText");
+  wrap.style.display = show ? "block" : "none";
+  bar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+  label.textContent = text;
+}
+
+function qfsReset(){
+  qfsClearAlert();
+  qfsClearBanner();
+
+  qfsLastFile = null;
+  qfsLastSha = "";
+
+  document.getElementById("qfsFile").value = "";
+
+  document.getElementById("qfsName").textContent = "—";
+  document.getElementById("qfsSize").textContent = "—";
+  document.getElementById("qfsType").textContent = "—";
+  document.getElementById("qfsSha").textContent = "—";
+  document.getElementById("qfsCopyBtn").disabled = true;
+
+  qfsSetEntropy(NaN);
+  qfsSetRing(0);
+  qfsSetLabel("—", 0);
+
+  document.getElementById("qfsRiskLabel").textContent = "—";
+  document.getElementById("qfsVerdict").textContent = "—";
+  document.getElementById("qfsSig").textContent = "—";
+  document.getElementById("qfsFamily").textContent = "—";
+
+  qfsSetSignals([]);
+  document.getElementById("qfsReco").textContent = "—";
+  document.getElementById("qfsTime").textContent = "—";
+  document.getElementById("qfsLast").textContent = "—";
+
+  document.getElementById("qfsRescanBtn").disabled = true;
+  qfsShowProgress(false);
+}
+
+async function qfsScan(forceFile=null){
+  qfsClearAlert();
+  qfsClearBanner();
+
+  const fileEl = document.getElementById("qfsFile");
+  const file = forceFile || (fileEl.files && fileEl.files[0] ? fileEl.files[0] : null);
+
+  if (!file){
+    qfsAlert("Select a file first.", "danger");
+    return;
+  }
+
+  // Client validation (size/type)
+  if (file.size > QFS_MAX_BYTES){
+    qfsAlert("File too large. Max is 25MB.", "danger");
+    return;
+  }
+
+  const ext = qfsExtOf(file.name);
+  if (!QFS_ALLOWED.has(ext)){
+    qfsAlert(`Unsupported file type: .${ext || "?"}`, "danger");
+    return;
+  }
+
+  qfsLastFile = file;
+  document.getElementById("qfsRescanBtn").disabled = false;
+
+  // UI: show basic info immediately
+  document.getElementById("qfsName").textContent = file.name;
+  document.getElementById("qfsSize").textContent = qfsPrettySize(file.size);
+  document.getElementById("qfsType").textContent = file.type || "application/octet-stream";
+
+  qfsSetBusy(true);
+  qfsShowProgress(true, 12, "Uploading…");
+  document.getElementById("qfsLast").textContent = "Scanning…";
+  document.getElementById("qfsTime").textContent = "—";
+
+  try{
+    const fd = new FormData();
+    fd.append("file", file);
+
+    const data = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/file/scan", true);
+
+      xhr.upload.onprogress = (evt) => {
+        if (evt.lengthComputable){
+          const pct = Math.round((evt.loaded / evt.total) * 70); // upload = 0–70
+          qfsShowProgress(true, pct, `Uploading… ${pct}%`);
+        }
+      };
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4){
+          let json = null;
+          try { json = JSON.parse(xhr.responseText || "{}"); } catch { json = null; }
+
+          if (xhr.status >= 200 && xhr.status < 300 && json){
+            resolve(json);
+          } else {
+            const err = (json && json.error) ? json.error : `Server error (${xhr.status})`;
+            reject(err);
+          }
+        }
+      };
+
+      xhr.onerror = () => reject("Network error.");
+      xhr.ontimeout = () => reject("Scan timeout (60s).");
+      xhr.timeout = 60000;
+
+      xhr.send(fd);
+    });
+
+    qfsShowProgress(true, 88, "Analyzing…");
+
+    // Strict format usage
+    const score = qfsClampScore(data?.report?.score);
+    const label = String(data?.report?.label || "—");
+
+    // Single source of truth: data.report.score
+    qfsSetRing(score);
+    qfsSetLabel(label, score);
+
+    // Threat report fields
+    const verdict = String(data?.report?.verdict || "").toLowerCase();
+    const sigs = Array.isArray(data?.report?.detected_signatures) ? data.report.detected_signatures : [];
+
+    document.getElementById("qfsRiskLabel").textContent = label;
+    document.getElementById("qfsVerdict").textContent =
+      verdict ? verdict.toUpperCase() : "—";
+    document.getElementById("qfsSig").textContent = sigs.length ? sigs.join(", ") : "—";
+    document.getElementById("qfsFamily").textContent =
+      data?.report?.malware_family ? String(data.report.malware_family) : "—";
+
+    // File metadata
+    const sha = String(data?.file?.sha256 || data?.report?.sha256 || "");
+    qfsLastSha = sha;
+    document.getElementById("qfsSha").textContent = sha ? (sha.slice(0, 14) + "…" + sha.slice(-10)) : "—";
+    document.getElementById("qfsCopyBtn").disabled = !sha;
+
+    qfsSetEntropy(data?.file?.entropy);
+
+    // Signals list
+    const signals = Array.isArray(data?.report?.signals) ? data.report.signals : [];
+    qfsSetSignals(signals);
+
+    // Recommendation (FIXED: always render, with safe fallback)
+    const reco =
+      (typeof data?.report?.recommendation === "string" && data.report.recommendation.trim())
+        ? data.report.recommendation.trim()
+        : (verdict === "malicious"
+            ? "Quarantine/Delete this file immediately."
+            : (verdict === "suspicious"
+                ? "Review carefully before opening/executing."
+                : "No known threats detected. Proceed normally."
+              )
+          );
+
+    document.getElementById("qfsReco").textContent = reco;
+    document.getElementById("qfsTime").textContent = `${Number(data?.report?.scan_time_ms ?? 0)} ms`;
+    document.getElementById("qfsLast").textContent = `${score}/100`;
+
+    // Banner + auto-expand behavior
+    if (verdict === "malicious" || sigs.length > 0 || score >= 76){
+      qfsSetBanner("malicious", "Malicious File Detected");
+      // Auto focus threat report panel
+      document.getElementById("qfsThreatPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+    } else if (verdict === "suspicious" || score >= 26){
+      qfsSetBanner("suspicious", "Suspicious File Detected");
+      document.getElementById("qfsThreatPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      qfsSetBanner("safe", "No Known Threats Detected");
+    }
+
+    qfsShowProgress(false);
+  } catch (err){
+    const msg = String(err || "");
+    qfsAlert(msg || "Scan failed.", "danger");
+    qfsShowProgress(false);
+    document.getElementById("qfsLast").textContent = "Failed";
+  } finally {
+    qfsSetBusy(false);
+  }
+}
+
+/* Drag & Drop */
+const drop = document.getElementById("qfsDrop");
+if (drop){
+  drop.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    drop.classList.add("dragover");
+  });
+  drop.addEventListener("dragleave", () => drop.classList.remove("dragover"));
+  drop.addEventListener("drop", (e) => {
+    e.preventDefault();
+    drop.classList.remove("dragover");
+    const f = e.dataTransfer.files && e.dataTransfer.files[0] ? e.dataTransfer.files[0] : null;
+    if (!f) return;
+
+    // Set into input for consistency
+    const input = document.getElementById("qfsFile");
+    try{
+      const dt = new DataTransfer();
+      dt.items.add(f);
+      input.files = dt.files;
+    } catch {}
+
+    qfsScan(f);
+  });
+}
+
+/* Init */
+qfsReset();
+qfsSetRing(0);
+qfsSetLabel("—", 0);
+</script>

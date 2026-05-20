@@ -1,0 +1,59 @@
+<div class="card" style="max-width:1100px;">
+  <div class="topbar">
+    <div>
+      <h2 class="h2">Settings</h2>
+      <div class="muted">Session, account, and platform configuration (UI-only placeholders).</div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:14px;">
+    <div class="panelcard">
+      <div class="panelcard-h">Account</div>
+      <div class="panelcard-s">Signed-in context and session info</div>
+
+      <div class="mini" style="margin-top:12px;">
+        <div class="mini-k">Session</div>
+        <div class="mini-v">Active</div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button class="btn" onclick="pgLogout()">Logout</button>
+        <button class="btn" onclick="pgConnectAnother()">Connect to another web</button>
+      </div>
+
+      <div class="muted" style="margin-top:10px;">
+        Logout wiring: bind this button to your existing backend logout route when available.
+      </div>
+    </div>
+
+    <div class="panelcard">
+      <div class="panelcard-h">Platform</div>
+      <div class="panelcard-s">Theme + API status (read-only)</div>
+
+      <div class="mini" style="margin-top:12px;">
+        <div class="mini-k">Theme Toggle</div>
+        <div class="mini-v">Placeholder</div>
+      </div>
+
+      <div class="status-grid" style="margin-top:12px;">
+        <div class="status-item"><span class="dot ok"></span> VirusTotal</div>
+        <div class="status-item"><span class="dot ok"></span> Safe Browsing</div>
+        <div class="status-item"><span class="dot ok"></span> AbuseIPDB</div>
+        <div class="status-item"><span class="dot ok"></span> IPInfo</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function pgLogout(){
+  // UI-safe default: clear client hints and return home.
+  // Replace with your real logout route if/when you add auth.
+  if (window.pgToast) window.pgToast("Logout placeholder. Wire to backend logout route.", "info");
+  setTimeout(()=> location.href="/tool/gmail", 800);
+}
+function pgConnectAnother(){
+  // External redirect placeholder
+  if (window.pgToast) window.pgToast("Redirect placeholder (configure target).", "info");
+}
+</script>

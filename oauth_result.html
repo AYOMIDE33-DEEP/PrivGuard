@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>OAuth Result</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="content">
+    <div class="card">
+      <h2>Gmail OAuth Result</h2>
+
+      <div class="out" style="white-space:pre-wrap;">
+OK: {{ ok }}
+Message: {{ message }}
+      </div>
+
+      <h3 style="margin-top:14px;">Callback details</h3>
+      <pre class="out">{{ details | tojson(indent=2) }}</pre>
+
+      <div class="row">
+        <a class="btn" href="{{ next_url }}">Back to Dashboard</a>
+        <a class="btn" href="/api/gmail/status">Check Status</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

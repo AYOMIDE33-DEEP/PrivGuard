@@ -1,0 +1,1057 @@
+<div class="socdash-shell">
+  <div class="socdash-hero">
+    <div class="socdash-hero-copy">
+      <div class="socdash-eyebrow">PrivGuard • SOC View</div>
+      <h2 class="socdash-title">Security Operations Dashboard</h2>
+      <div class="socdash-subtitle">Live metrics from real scan events (SQLite-backed).</div>
+    </div>
+
+    <div class="socdash-hero-actions">
+      <button class="socdash-compose-btn" onclick="socOpenComposeEmail()">
+        <span class="socdash-compose-icon">✉</span>
+        <span>Compose Email</span>
+      </button>
+
+      <div class="socdash-live-pill">
+        <span class="socdash-live-dot"></span>
+        <span>Live telemetry</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="socdash-kpi-grid">
+    <div class="socdash-kpi">
+      <div class="socdash-kpi-label">Scans Today</div>
+      <div class="socdash-kpi-value" id="kpiTotal">—</div>
+      <div class="socdash-kpi-sub">All modules</div>
+      <div class="socdash-kpi-glow"></div>
+    </div>
+
+    <div class="socdash-kpi ok">
+      <div class="socdash-kpi-label">Safe</div>
+      <div class="socdash-kpi-value" id="kpiSafe">—</div>
+      <div class="socdash-kpi-sub">0–10</div>
+      <div class="socdash-kpi-glow"></div>
+    </div>
+
+    <div class="socdash-kpi warn">
+      <div class="socdash-kpi-label">Low / Medium</div>
+      <div class="socdash-kpi-value"><span id="kpiLow">—</span> / <span id="kpiMed">—</span></div>
+      <div class="socdash-kpi-sub">11–29 / 30–59</div>
+      <div class="socdash-kpi-glow"></div>
+    </div>
+
+    <div class="socdash-kpi danger">
+      <div class="socdash-kpi-label">High</div>
+      <div class="socdash-kpi-value" id="kpiHigh">—</div>
+      <div class="socdash-kpi-sub">60–100</div>
+      <div class="socdash-kpi-glow"></div>
+    </div>
+  </div>
+
+  <div class="socdash-quick-grid">
+    <div class="socdash-quick-card">
+      <div class="socdash-quick-top">
+        <div>
+          <div class="socdash-quick-title">Email Center</div>
+          <div class="socdash-quick-sub">Open your integrated email workspace</div>
+        </div>
+        <div class="socdash-quick-badge">New</div>
+      </div>
+
+      <div class="socdash-quick-actions">
+        <button class="socdash-mini-btn primary" onclick="socOpenComposeEmail()">Compose</button>
+        <button class="socdash-mini-btn" onclick="socOpenEmailSection('sent')">Sent</button>
+        <button class="socdash-mini-btn" onclick="socOpenEmailSection('drafts')">Drafts</button>
+        <button class="socdash-mini-btn" onclick="socOpenEmailSection('inbox')">Inbox</button>
+      </div>
+    </div>
+
+    <div class="socdash-quick-card">
+      <div class="socdash-quick-top">
+        <div>
+          <div class="socdash-quick-title">Operational Shortcut</div>
+          <div class="socdash-quick-sub">Fast analyst navigation inside PrivGuard</div>
+        </div>
+        <div class="socdash-quick-badge neutral">Tools</div>
+      </div>
+
+      <div class="socdash-quick-actions">
+        <button class="socdash-mini-btn" onclick="socGoTool('gmail')">Threat Inbox</button>
+        <button class="socdash-mini-btn" onclick="socGoTool('phishing')">URL Check</button>
+        <button class="socdash-mini-btn" onclick="socGoTool('header')">Header Scan</button>
+        <button class="socdash-mini-btn" onclick="socGoTool('filescan')">File Scan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="socdash-main-grid">
+    <div class="socdash-panel">
+      <div class="socdash-panel-head">
+        <div>
+          <div class="socdash-panel-title">Risk Distribution</div>
+          <div class="socdash-panel-sub">Today’s scan categories</div>
+        </div>
+        <div class="socdash-panel-badge" id="distMeta">Scale: live</div>
+      </div>
+
+      <div class="socdash-chart-wrap">
+        <div class="socdash-chart-grid"></div>
+
+        <div class="socdash-bars" id="riskCols">
+          <div class="socdash-bar-col">
+            <div class="socdash-bar safe" id="barSafe">
+              <div class="socdash-bar-shine"></div>
+            </div>
+            <div class="socdash-bar-meta">
+              <div class="socdash-bar-label">SAFE</div>
+              <div class="socdash-bar-value" id="vSafe">—</div>
+              <div class="socdash-bar-pct" id="pSafe">—</div>
+            </div>
+          </div>
+
+          <div class="socdash-bar-col">
+            <div class="socdash-bar low" id="barLow">
+              <div class="socdash-bar-shine"></div>
+            </div>
+            <div class="socdash-bar-meta">
+              <div class="socdash-bar-label">LOW</div>
+              <div class="socdash-bar-value" id="vLow">—</div>
+              <div class="socdash-bar-pct" id="pLow">—</div>
+            </div>
+          </div>
+
+          <div class="socdash-bar-col">
+            <div class="socdash-bar medium" id="barMed">
+              <div class="socdash-bar-shine"></div>
+            </div>
+            <div class="socdash-bar-meta">
+              <div class="socdash-bar-label">MEDIUM</div>
+              <div class="socdash-bar-value" id="vMed">—</div>
+              <div class="socdash-bar-pct" id="pMed">—</div>
+            </div>
+          </div>
+
+          <div class="socdash-bar-col">
+            <div class="socdash-bar high" id="barHigh">
+              <div class="socdash-bar-shine"></div>
+            </div>
+            <div class="socdash-bar-meta">
+              <div class="socdash-bar-label">HIGH</div>
+              <div class="socdash-bar-value" id="vHigh">—</div>
+              <div class="socdash-bar-pct" id="pHigh">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="socdash-footline">
+        <span id="avgLine">Average score today: —</span>
+        <span id="barNote">Bar height is scaled to the highest category. Percentage shows true share of today’s scans.</span>
+      </div>
+    </div>
+
+    <div class="socdash-panel">
+      <div class="socdash-panel-head">
+        <div>
+          <div class="socdash-panel-title">Recent Activity</div>
+          <div class="socdash-panel-sub">Latest 10 scans (today)</div>
+        </div>
+        <div class="socdash-panel-badge" id="recentCount">0 events</div>
+      </div>
+
+      <div class="socdash-table-wrap">
+        <div class="socdash-table">
+          <div class="socdash-tr socdash-th">
+            <div>Time</div>
+            <div>Module</div>
+            <div>Target</div>
+            <div>Risk</div>
+          </div>
+          <div id="recentRows"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="socdash-bottom-grid">
+    <div class="socdash-panel">
+      <div class="socdash-panel-head">
+        <div>
+          <div class="socdash-panel-title">API Status</div>
+          <div class="socdash-panel-sub">Backend service visibility</div>
+        </div>
+      </div>
+
+      <div class="socdash-api-grid">
+        <div class="socdash-api-card">
+          <div class="socdash-api-name">Gmail OAuth</div>
+          <div class="socdash-api-status" id="apiGmail">Checking…</div>
+          <div class="socdash-api-meta" id="apiGmailMeta">Connection state</div>
+        </div>
+
+        <div class="socdash-api-card">
+          <div class="socdash-api-name">VirusTotal</div>
+          <div class="socdash-api-status neutral" id="apiVT">Server Managed</div>
+          <div class="socdash-api-meta">Used by phishing / IP reputation tools</div>
+        </div>
+
+        <div class="socdash-api-card">
+          <div class="socdash-api-name">Google Safe Browsing</div>
+          <div class="socdash-api-status neutral" id="apiGSB">Server Managed</div>
+          <div class="socdash-api-meta">Used by phishing URL checker</div>
+        </div>
+
+        <div class="socdash-api-card">
+          <div class="socdash-api-name">AbuseIPDB / IPinfo</div>
+          <div class="socdash-api-status neutral" id="apiIP">Server Managed</div>
+          <div class="socdash-api-meta">Used by IP reputation / header analyzer</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="socdash-panel">
+      <div class="socdash-panel-head">
+        <div>
+          <div class="socdash-panel-title">Operational Summary</div>
+          <div class="socdash-panel-sub">Fast analyst view</div>
+        </div>
+      </div>
+
+      <div class="socdash-summary-grid">
+        <div class="socdash-summary-card">
+          <div class="socdash-summary-k">Most Active Module</div>
+          <div class="socdash-summary-v" id="sumModule">—</div>
+        </div>
+
+        <div class="socdash-summary-card">
+          <div class="socdash-summary-k">Highest Risk Seen</div>
+          <div class="socdash-summary-v" id="sumHighest">—</div>
+        </div>
+
+        <div class="socdash-summary-card">
+          <div class="socdash-summary-k">Latest Scan</div>
+          <div class="socdash-summary-v" id="sumLatest">—</div>
+        </div>
+
+        <div class="socdash-summary-card">
+          <div class="socdash-summary-k">System State</div>
+          <div class="socdash-summary-v" id="sumState">Nominal</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.socdash-shell{
+  width:100%;
+  max-width:1500px;
+  min-height:calc(100vh - 24px);
+  padding:18px;
+  border-radius:26px;
+  border:1px solid rgba(0,245,255,.12);
+  background:
+    radial-gradient(circle at 80% 14%, rgba(255,72,99,.08), transparent 20%),
+    radial-gradient(circle at 18% 82%, rgba(0,245,255,.07), transparent 20%),
+    linear-gradient(180deg, rgba(6,13,27,.90), rgba(4,9,20,.97));
+  box-shadow:
+    0 24px 80px rgba(0,0,0,.38),
+    inset 0 0 0 1px rgba(0,245,255,.04);
+  overflow:hidden;
+}
+
+.socdash-hero{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:18px;
+}
+.socdash-hero-copy{
+  min-width:0;
+}
+.socdash-hero-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.socdash-eyebrow{
+  color:rgba(0,245,255,.9);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.socdash-title{
+  margin:0;
+  font-size:22px;
+  font-weight:1100;
+  letter-spacing:.2px;
+}
+.socdash-subtitle{
+  margin-top:8px;
+  color:rgba(185,203,238,.82);
+  font-size:14px;
+}
+
+.socdash-compose-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  min-height:50px;
+  padding:0 18px;
+  border-radius:999px;
+  border:1px solid rgba(0,245,255,.22);
+  background:
+    linear-gradient(180deg, rgba(0,245,255,.12), rgba(0,245,255,.06));
+  color:#e9fbff;
+  font-size:14px;
+  font-weight:1000;
+  letter-spacing:.02em;
+  cursor:pointer;
+  box-shadow:
+    0 12px 24px rgba(0,0,0,.18),
+    inset 0 0 0 1px rgba(255,255,255,.04);
+  transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease, filter .16s ease;
+}
+.socdash-compose-btn:hover{
+  transform:translateY(-2px);
+  border-color:rgba(0,255,156,.30);
+  box-shadow:
+    0 18px 32px rgba(0,0,0,.22),
+    0 0 18px rgba(0,245,255,.10),
+    inset 0 0 0 1px rgba(255,255,255,.06);
+  filter:brightness(1.04);
+}
+.socdash-compose-btn:active{
+  transform:translateY(0);
+}
+.socdash-compose-icon{
+  width:24px;
+  height:24px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:50%;
+  background:rgba(0,255,156,.14);
+  color:#8fffd5;
+  font-size:13px;
+  box-shadow:0 0 12px rgba(0,255,156,.16);
+}
+
+.socdash-live-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid rgba(0,255,156,.20);
+  background:rgba(0,255,156,.07);
+  color:rgba(219,255,239,.92);
+  font-size:13px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.socdash-live-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#00ff9c;
+  box-shadow:0 0 14px rgba(0,255,156,.88);
+  animation:socdashPulse 1.6s infinite ease-in-out;
+}
+@keyframes socdashPulse{
+  0%,100%{ transform:scale(1); opacity:1; }
+  50%{ transform:scale(1.28); opacity:.72; }
+}
+
+.socdash-kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:16px;
+  margin-bottom:16px;
+}
+.socdash-kpi{
+  position:relative;
+  overflow:hidden;
+  padding:18px 18px 16px;
+  border-radius:20px;
+  border:1px solid rgba(0,245,255,.12);
+  background:linear-gradient(180deg, rgba(9,18,37,.70), rgba(5,11,24,.88));
+  box-shadow:inset 0 0 0 1px rgba(0,245,255,.04);
+  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.socdash-kpi:hover{
+  transform:translateY(-2px);
+  border-color:rgba(0,245,255,.20);
+  box-shadow:0 18px 36px rgba(0,0,0,.20), inset 0 0 0 1px rgba(0,245,255,.06);
+}
+.socdash-kpi.ok{ border-color:rgba(0,255,156,.18); }
+.socdash-kpi.warn{ border-color:rgba(255,190,110,.18); }
+.socdash-kpi.danger{ border-color:rgba(255,72,99,.18); }
+.socdash-kpi-label{
+  color:rgba(151,174,212,.86);
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.socdash-kpi-value{
+  margin-top:10px;
+  font-size:34px;
+  line-height:1;
+  font-weight:1100;
+}
+.socdash-kpi-sub{
+  margin-top:10px;
+  color:rgba(185,203,238,.76);
+  font-size:14px;
+}
+.socdash-kpi-glow{
+  position:absolute;
+  right:-24px;
+  bottom:-24px;
+  width:96px;
+  height:96px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(0,245,255,.14), transparent 70%);
+  pointer-events:none;
+}
+
+.socdash-quick-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:16px;
+}
+.socdash-quick-card{
+  padding:16px 18px;
+  border-radius:20px;
+  border:1px solid rgba(0,245,255,.10);
+  background:linear-gradient(180deg, rgba(7,15,31,.72), rgba(4,10,22,.92));
+  box-shadow:inset 0 0 0 1px rgba(0,245,255,.03);
+}
+.socdash-quick-top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.socdash-quick-title{
+  font-size:17px;
+  font-weight:1100;
+}
+.socdash-quick-sub{
+  margin-top:5px;
+  font-size:13px;
+  color:rgba(181,199,235,.74);
+}
+.socdash-quick-badge{
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(0,255,156,.20);
+  background:rgba(0,255,156,.07);
+  color:#d9fff0;
+  font-size:12px;
+  font-weight:1000;
+  white-space:nowrap;
+}
+.socdash-quick-badge.neutral{
+  border-color:rgba(0,245,255,.16);
+  background:rgba(0,245,255,.05);
+  color:rgba(219,233,255,.90);
+}
+.socdash-quick-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:14px;
+}
+.socdash-mini-btn{
+  min-height:40px;
+  padding:0 14px;
+  border-radius:12px;
+  border:1px solid rgba(0,245,255,.14);
+  background:rgba(0,245,255,.05);
+  color:#eaf5ff;
+  font-size:13px;
+  font-weight:900;
+  cursor:pointer;
+  transition:transform .16s ease, border-color .16s ease, background .16s ease;
+}
+.socdash-mini-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(0,245,255,.24);
+  background:rgba(0,245,255,.08);
+}
+.socdash-mini-btn.primary{
+  border-color:rgba(0,255,156,.22);
+  background:rgba(0,255,156,.08);
+  color:#ddfff0;
+}
+
+.socdash-main-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+.socdash-bottom-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:16px;
+}
+
+.socdash-panel{
+  padding:18px;
+  border-radius:22px;
+  border:1px solid rgba(0,245,255,.10);
+  background:linear-gradient(180deg, rgba(7,15,31,.72), rgba(4,10,22,.92));
+  box-shadow:inset 0 0 0 1px rgba(0,245,255,.03);
+}
+.socdash-panel-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+.socdash-panel-title{
+  font-size:18px;
+  font-weight:1100;
+}
+.socdash-panel-sub{
+  margin-top:5px;
+  font-size:13px;
+  color:rgba(181,199,235,.74);
+}
+.socdash-panel-badge{
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(0,245,255,.14);
+  background:rgba(0,245,255,.05);
+  color:rgba(214,224,245,.92);
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.socdash-chart-wrap{
+  position:relative;
+  min-height:320px;
+  padding:18px 14px 10px;
+  border-radius:18px;
+  border:1px solid rgba(0,245,255,.08);
+  background:
+    linear-gradient(180deg, rgba(3,9,21,.78), rgba(3,8,19,.92));
+  overflow:hidden;
+}
+.socdash-chart-grid{
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(to top, rgba(0,245,255,.06) 1px, transparent 1px);
+  background-size:100% 25%;
+  pointer-events:none;
+  opacity:.6;
+}
+.socdash-bars{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:14px;
+  align-items:end;
+  min-height:290px;
+}
+.socdash-bar-col{
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  gap:12px;
+  min-height:290px;
+}
+.socdash-bar{
+  position:relative;
+  min-height:8px;
+  border-radius:18px 18px 12px 12px;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:
+    0 16px 36px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  transition:height .6s cubic-bezier(.2,.8,.2,1), transform .18s ease;
+  overflow:hidden;
+}
+.socdash-bar:hover{ transform:translateY(-2px); }
+.socdash-bar.safe{
+  background:linear-gradient(180deg, rgba(70,210,120,.92), rgba(52,146,87,.88));
+}
+.socdash-bar.low{
+  background:linear-gradient(180deg, rgba(32,212,230,.96), rgba(16,142,165,.90));
+}
+.socdash-bar.medium{
+  background:linear-gradient(180deg, rgba(212,170,104,.96), rgba(176,136,82,.88));
+}
+.socdash-bar.high{
+  background:linear-gradient(180deg, rgba(255,96,122,.96), rgba(206,63,92,.90));
+}
+.socdash-bar-shine{
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg, rgba(255,255,255,.16), transparent 35%);
+  pointer-events:none;
+}
+.socdash-bar-meta{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.socdash-bar-label{
+  color:rgba(171,192,231,.84);
+  font-size:12px;
+  font-weight:1000;
+  letter-spacing:.08em;
+}
+.socdash-bar-value{
+  font-size:16px;
+  font-weight:1100;
+}
+.socdash-bar-pct{
+  color:rgba(171,192,231,.70);
+  font-size:12px;
+  font-weight:800;
+}
+.socdash-footline{
+  margin-top:14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  color:rgba(171,192,231,.76);
+  font-size:13px;
+}
+
+.socdash-table-wrap{
+  border-radius:18px;
+  border:1px solid rgba(0,245,255,.08);
+  overflow:hidden;
+  background:rgba(0,0,0,.12);
+}
+.socdash-table{
+  width:100%;
+}
+.socdash-tr{
+  display:grid;
+  grid-template-columns:150px 200px minmax(0,1fr) 120px;
+  gap:12px;
+  align-items:center;
+  padding:14px 16px;
+  border-bottom:1px solid rgba(0,245,255,.06);
+}
+.socdash-th{
+  background:rgba(0,245,255,.08);
+  color:rgba(227,237,255,.96);
+  font-weight:1000;
+}
+.socdash-tr:last-child{ border-bottom:none; }
+
+.socdash-row-target{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.socdash-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:88px;
+  height:32px;
+  padding:0 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:1000;
+  border:1px solid rgba(255,255,255,.12);
+}
+.socdash-pill.safe{
+  color:#cffff0;
+  background:rgba(70,210,120,.10);
+  border-color:rgba(70,210,120,.28);
+}
+.socdash-pill.low{
+  color:#7ef5ff;
+  background:rgba(0,245,255,.08);
+  border-color:rgba(0,245,255,.24);
+}
+.socdash-pill.medium{
+  color:#ffd18f;
+  background:rgba(255,190,110,.08);
+  border-color:rgba(255,190,110,.26);
+}
+.socdash-pill.high{
+  color:#ffc6d1;
+  background:rgba(255,72,99,.10);
+  border-color:rgba(255,72,99,.26);
+}
+
+.socdash-api-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:14px;
+}
+.socdash-api-card{
+  padding:14px 14px 12px;
+  border-radius:16px;
+  border:1px solid rgba(0,245,255,.08);
+  background:rgba(0,0,0,.14);
+}
+.socdash-api-name{
+  font-size:14px;
+  font-weight:1000;
+  color:rgba(225,235,255,.94);
+}
+.socdash-api-status{
+  margin-top:10px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  border:1px solid rgba(0,255,156,.24);
+  background:rgba(0,255,156,.08);
+  color:#d9fff0;
+  font-size:12px;
+  font-weight:1000;
+}
+.socdash-api-status.warn{
+  border-color:rgba(255,190,110,.24);
+  background:rgba(255,190,110,.09);
+  color:#ffdca9;
+}
+.socdash-api-status.danger{
+  border-color:rgba(255,72,99,.24);
+  background:rgba(255,72,99,.10);
+  color:#ffc8d2;
+}
+.socdash-api-status.neutral{
+  border-color:rgba(0,245,255,.18);
+  background:rgba(0,245,255,.05);
+  color:rgba(219,233,255,.90);
+}
+.socdash-api-meta{
+  margin-top:10px;
+  color:rgba(181,199,235,.72);
+  font-size:12px;
+}
+
+.socdash-summary-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:14px;
+}
+.socdash-summary-card{
+  padding:16px;
+  border-radius:16px;
+  border:1px solid rgba(0,245,255,.08);
+  background:rgba(0,0,0,.14);
+}
+.socdash-summary-k{
+  color:rgba(171,192,231,.78);
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.socdash-summary-v{
+  margin-top:10px;
+  font-size:18px;
+  font-weight:1100;
+}
+
+@media (max-width: 1300px){
+  .socdash-main-grid,
+  .socdash-bottom-grid,
+  .socdash-quick-grid{
+    grid-template-columns:1fr;
+  }
+}
+@media (max-width: 1100px){
+  .socdash-kpi-grid{
+    grid-template-columns:repeat(2, minmax(0,1fr));
+  }
+  .socdash-tr{
+    grid-template-columns:120px 150px minmax(0,1fr) 100px;
+  }
+}
+@media (max-width: 760px){
+  .socdash-shell{ padding:14px; }
+  .socdash-hero{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+  .socdash-hero-actions{
+    width:100%;
+    justify-content:flex-start;
+  }
+  .socdash-compose-btn{
+    width:100%;
+    justify-content:center;
+  }
+  .socdash-kpi-grid,
+  .socdash-api-grid,
+  .socdash-summary-grid{
+    grid-template-columns:1fr;
+  }
+  .socdash-bars{
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    min-height:unset;
+  }
+  .socdash-bar-col{
+    min-height:220px;
+  }
+  .socdash-tr,
+  .socdash-th{
+    grid-template-columns:1fr 1fr;
+  }
+  .socdash-tr > div:nth-child(3),
+  .socdash-tr > div:nth-child(4){
+    margin-top:6px;
+  }
+}
+
+
+</style>
+
+<script>
+function socFmtTime(ts){
+  const d = new Date((ts || 0) * 1000);
+  return d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+}
+
+function socClamp(n, a, b){
+  n = Number(n);
+  if(!Number.isFinite(n)) n = 0;
+  return Math.max(a, Math.min(b, n));
+}
+
+function socRiskClass(label){
+  const v = String(label || "").toUpperCase();
+  if(v === "HIGH") return "high";
+  if(v === "MEDIUM") return "medium";
+  if(v === "LOW") return "low";
+  return "safe";
+}
+
+function socRiskPill(label){
+  const cls = socRiskClass(label);
+  const txt = String(label || "SAFE").toUpperCase();
+  return `<div class="socdash-pill ${cls}">${txt}</div>`;
+}
+
+function socAnimateNumber(el, target){
+  if(!el) return;
+  const end = Number(target || 0);
+  const start = Number(el.dataset.value || 0);
+  const duration = 550;
+  const startAt = performance.now();
+
+  function frame(now){
+    const p = Math.min(1, (now - startAt) / duration);
+    const eased = 1 - Math.pow(1 - p, 3);
+    const val = Math.round(start + (end - start) * eased);
+    el.textContent = String(val);
+    if(p < 1){
+      requestAnimationFrame(frame);
+    } else {
+      el.dataset.value = String(end);
+      el.textContent = String(end);
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+function socSetBar(elId, value, max){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const v = Number(value || 0);
+  const m = Math.max(1, Number(max || 1));
+  const ratio = v / m;
+  const minVisible = v > 0 ? 14 : 6;
+  const h = minVisible + (ratio * 210);
+  el.style.height = `${Math.round(h)}px`;
+}
+
+function socGoTool(tool){
+  window.location.href = `/tool/${encodeURIComponent(tool)}`;
+}
+
+function socOpenComposeEmail(){
+  window.location.href = "/tool/emailcenter";
+}
+
+function socOpenEmailSection(section){
+  const view = section || "compose";
+  window.location.href = `/tool/emailcenter?view=${encodeURIComponent(view)}`;
+}
+
+async function socFetchMetrics(){
+  const r = await fetch("/api/dashboard/metrics", {cache:"no-store"});
+  const j = await r.json();
+  if(!r.ok || !j || j.ok !== true){
+    throw new Error(j?.error || "metrics_failed");
+  }
+  return j;
+}
+
+async function socFetchApiStatuses(){
+  try{
+    const r = await fetch("/api/gmail/status", {cache:"no-store"});
+    const j = await r.json();
+    if(!r.ok){
+      return { gmail: { state: "Unavailable", cls: "danger", meta: "Status endpoint unreachable" } };
+    }
+
+    if(j.connected){
+      return { gmail: { state: "Connected", cls: "", meta: "OAuth session active" } };
+    }
+    if(j.configured){
+      return { gmail: { state: "Ready", cls: "warn", meta: "Configured, waiting for login" } };
+    }
+    return { gmail: { state: "Not Configured", cls: "danger", meta: "credentials.json missing" } };
+  } catch(e){
+    return { gmail: { state: "Unavailable", cls: "danger", meta: "Status check failed" } };
+  }
+}
+
+function socBuildSummary(recent, today){
+  const items = Array.isArray(recent) ? recent : [];
+  const moduleCounts = {};
+  let highest = 0;
+  let latest = "—";
+
+  items.forEach(ev => {
+    const mod = ev.module || "Unknown";
+    moduleCounts[mod] = (moduleCounts[mod] || 0) + 1;
+    highest = Math.max(highest, Number(ev.score || 0));
+  });
+
+  const topModule = Object.entries(moduleCounts).sort((a,b) => b[1] - a[1])[0];
+  if(items.length){
+    latest = `${socFmtTime(items[0].ts)} • ${items[0].module || "Unknown"}`;
+  }
+
+  document.getElementById("sumModule").textContent = topModule ? `${topModule[0]} (${topModule[1]})` : "—";
+  document.getElementById("sumHighest").textContent = `${highest}/100`;
+  document.getElementById("sumLatest").textContent = latest;
+
+  const total = Number(today.total || 0);
+  const high = Number(today.high || 0);
+  const state = total === 0 ? "Idle" : (high > 0 ? "Attention Needed" : "Nominal");
+  document.getElementById("sumState").textContent = state;
+}
+
+function socPaintDashboard(m){
+  const t = m.today || {};
+  const total = Number(t.total || 0);
+  const safe = Number(t.safe || 0);
+  const low = Number(t.low || 0);
+  const med = Number(t.medium || 0);
+  const high = Number(t.high || 0);
+
+  socAnimateNumber(document.getElementById("kpiTotal"), total);
+  socAnimateNumber(document.getElementById("kpiSafe"), safe);
+  socAnimateNumber(document.getElementById("kpiLow"), low);
+  socAnimateNumber(document.getElementById("kpiMed"), med);
+  socAnimateNumber(document.getElementById("kpiHigh"), high);
+
+  document.getElementById("vSafe").textContent = safe.toString();
+  document.getElementById("vLow").textContent = low.toString();
+  document.getElementById("vMed").textContent = med.toString();
+  document.getElementById("vHigh").textContent = high.toString();
+
+  const share = (n) => total > 0 ? `${Math.round((Number(n || 0) / total) * 100)}% of scans` : "0% of scans";
+  document.getElementById("pSafe").textContent = share(safe);
+  document.getElementById("pLow").textContent = share(low);
+  document.getElementById("pMed").textContent = share(med);
+  document.getElementById("pHigh").textContent = share(high);
+
+  const maxVal = Math.max(1, safe, low, med, high);
+  socSetBar("barSafe", safe, maxVal);
+  socSetBar("barLow", low, maxVal);
+  socSetBar("barMed", med, maxVal);
+  socSetBar("barHigh", high, maxVal);
+
+  document.getElementById("distMeta").textContent = `Max category: ${maxVal}`;
+  document.getElementById("avgLine").textContent = `Average score today: ${Number(t.avg_score ?? 0).toFixed(1)}/100`;
+
+  const rows = (m.recent || []).map((ev, idx) => {
+    const time = socFmtTime(ev.ts);
+    const mod = ev.module || "";
+    const target = ev.target || "";
+    const pill = socRiskPill(ev.label);
+    return `<div class="socdash-tr" style="animation: fadeInUp .35s ease ${idx * 0.04}s both;">
+      <div>${time}</div>
+      <div>${mod}</div>
+      <div class="socdash-row-target">${target}</div>
+      <div>${pill}</div>
+    </div>`;
+  }).join("");
+
+  document.getElementById("recentRows").innerHTML =
+    rows || '<div class="socdash-tr"><div>—</div><div>—</div><div class="socdash-row-target">No activity yet</div><div></div></div>';
+
+  document.getElementById("recentCount").textContent = `${(m.recent || []).length} events`;
+  socBuildSummary(m.recent || [], t);
+}
+
+function socPaintApiStatus(statuses){
+  const gmail = statuses.gmail || {};
+  const gmailEl = document.getElementById("apiGmail");
+  const gmailMeta = document.getElementById("apiGmailMeta");
+
+  gmailEl.textContent = gmail.state || "Unknown";
+  gmailEl.className = `socdash-api-status ${gmail.cls || ""}`.trim();
+  gmailMeta.textContent = gmail.meta || "Connection state";
+}
+
+let __socDashTimer = null;
+
+async function socDashboardTick(){
+  try{
+    const [metrics, apiStatuses] = await Promise.all([
+      socFetchMetrics(),
+      socFetchApiStatuses()
+    ]);
+    socPaintDashboard(metrics);
+    socPaintApiStatus(apiStatuses);
+  } catch(e){
+    const el = document.getElementById("avgLine");
+    if(el){
+      el.textContent = "Dashboard offline: " + (e && e.message ? e.message : "metrics error");
+    }
+  }
+}
+
+function socStartDashboard(){
+  socDashboardTick();
+  if(__socDashTimer) clearInterval(__socDashTimer);
+  __socDashTimer = setInterval(socDashboardTick, 6000);
+}
+
+const fadeStyle = document.createElement("style");
+fadeStyle.textContent = `
+@keyframes fadeInUp{
+  from{ opacity:0; transform:translateY(10px); }
+  to{ opacity:1; transform:translateY(0); }
+}`;
+document.head.appendChild(fadeStyle);
+
+socStartDashboard();
+</script>

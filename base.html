@@ -1,0 +1,230 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PrivGuard</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <script defer src="{{ url_for('static', filename='js/ui.js', v='20260318-5') }}"></script>
+
+  <style id="pg-base-responsive-patch">
+    html, body{
+      max-width:100%;
+      overflow-x:hidden;
+    }
+
+    .layout{
+      display:flex;
+      min-width:0 !important;
+      width:100%;
+      max-width:100%;
+      overflow-x:hidden;
+    }
+
+    .sidebar{
+      flex:0 0 auto !important;
+      min-width:0;
+    }
+
+    .content{
+      flex:1 1 auto !important;
+      min-width:0 !important;
+      width:100% !important;
+      max-width:100% !important;
+      overflow-x:hidden !important;
+    }
+
+    .content > *{
+      min-width:0 !important;
+      max-width:100% !important;
+    }
+
+    @media (max-width: 980px){
+      .layout{
+        flex-direction:column !important;
+      }
+
+      .sidebar{
+        width:100% !important;
+        max-width:100% !important;
+      }
+
+      .content{
+        width:100% !important;
+        max-width:100% !important;
+      }
+    }
+  </style>
+
+</head>
+<body>
+  <div class="bg"></div>
+
+  <div class="toasts" id="pgToasts" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg class="brand-logo" viewBox="0 0 64 64" role="img" aria-label="PrivGuard logo">
+            <defs>
+              <linearGradient id="pgGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#00f5ff" stop-opacity="1"/>
+                <stop offset="1" stop-color="#00ff96" stop-opacity="1"/>
+              </linearGradient>
+              <filter id="pgGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur"/>
+                <feColorMatrix in="blur" type="matrix"
+                  values="0 0 0 0 0
+                          0 0 0 0 1
+                          0 0 0 0 1
+                          0 0 0 .85 0" result="glow"/>
+                <feMerge>
+                  <feMergeNode in="glow"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+            <path filter="url(#pgGlow)" d="M32 4l22 10v16c0 15-10 25-22 30C20 55 10 45 10 30V14L32 4z" fill="url(#pgGrad)" opacity=".92"/>
+            <path d="M32 12l14 6v12c0 10-6 17-14 21-8-4-14-11-14-21V18l14-6z" fill="rgba(0,0,0,.28)"/>
+            <path d="M30.2 34.8l-5.4-5.4 3-3 2.4 2.4 6.9-6.9 3 3-9.9 9.9z" fill="rgba(255,255,255,.92)"/>
+          </svg>
+        </div>
+        <div class="brand-name">PrivGuard</div>
+      </div>
+
+      <!-- Core -->
+      <a class="nav {{ 'active' if tool=='dashboard' else '' }}" href="/tool/dashboard">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M4 11.5V20h7v-6.5H4Z" stroke="currentColor" stroke-width="2" />
+            <path d="M13 4h7v16h-7V4Z" stroke="currentColor" stroke-width="2" />
+            <path d="M4 4h7v5.5H4V4Z" stroke="currentColor" stroke-width="2" />
+          </svg>
+        </span>
+        <span>Dashboard</span>
+      </a>
+
+      <a class="nav {{ 'active' if tool=='gmail' else '' }}" href="/tool/gmail">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M4 6h16v12H4V6Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M4.5 7l7.5 6 7.5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Gmail Scanner</span>
+      </a>
+
+      <a class="nav {{ 'active' if tool=='crypto' else '' }}" href="/tool/crypto">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M7 11V8a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M6.5 11h11A2.5 2.5 0 0 1 20 13.5v6A2.5 2.5 0 0 1 17.5 22h-11A2.5 2.5 0 0 1 4 19.5v-6A2.5 2.5 0 0 1 6.5 11Z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </span>
+        <span>Crypto Tool</span>
+      </a>
+
+      <div class="section">Security Tools</div>
+
+      <a class="nav {{ 'active' if tool=='password' else '' }}" href="/tool/password">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M12 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 13v8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Password Analyzer</span>
+      </a>
+
+      <a class="nav {{ 'active' if tool=='phishing' else '' }}" href="/tool/phishing">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M10 14a4 4 0 0 1 0-8h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M14 10a4 4 0 0 1 0 8h-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M9 12h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Phishing URL Checker</span>
+      </a>
+
+      <a class="nav {{ 'active' if tool=='header' else '' }}" href="/tool/header">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M6 4h12v16H6V4Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M8.5 8h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8.5 12h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8.5 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Email Header Analyzer</span>
+      </a>
+
+      <a class="nav {{ 'active' if tool=='iprep' else '' }}" href="/tool/iprep">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M12 22s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 12.2a2.2 2.2 0 1 0 0-4.4 2.2 2.2 0 0 0 0 4.4Z" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </span>
+        <span>IP Reputation Tool</span>
+      </a>
+
+      <a class="nav {{ 'active' if tool=='filescan' else '' }}" href="/tool/filescan">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M7 4h7l3 3v13H7V4Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M14 4v4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Quick File Scanner</span>
+      </a>
+
+      <a class="nav {{ 'active' if tool=='emailcenter' else '' }}" href="/tool/emailcenter">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M4 6h16v12H4V6Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M4.5 7l7.5 6 7.5-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Email Center</span>
+      </a>
+
+      <div class="section">Support</div>
+
+      <a class="nav {{ 'active' if tool=='settings' else '' }}" href="/tool/settings">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M19.4 15a8.7 8.7 0 0 0 .1-2l2-1.2-2-3.6-2.3.7a8.5 8.5 0 0 0-1.7-1L15.1 5h-6.2L8.5 7.9c-.6.3-1.2.6-1.7 1L4.5 8.2l-2 3.6 2 1.2a8.7 8.7 0 0 0 .1 2l-2 1.2 2 3.6 2.3-.7c.5.4 1.1.8 1.7 1l.4 2.9h6.2l.4-2.9c.6-.3 1.2-.6 1.7-1l2.3.7 2-3.6-2-1.2Z"
+                  stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span>Settings</span>
+      </a>
+
+      <a class="nav {{ 'active' if tool=='help' else '' }}" href="/tool/help">
+        <span class="ico">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
+            <path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M9.6 9a2.7 2.7 0 0 1 5.2 1c0 1.8-1.9 2.2-2.4 2.8-.3.3-.4.7-.4 1.2v.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 17.6h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Help</span>
+      </a>
+
+      <div class="sidebar-foot">
+        <div class="status-dot"></div>
+        <div class="status-text">Operational</div>
+      </div>
+    </aside>
+
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,492 @@
+<div class="card" style="max-width:1450px;">
+  <div class="topbar">
+    <div>
+      <h2 class="h2" style="margin:0;">EMAIL HEADER ANALYZER</h2>
+      <div class="muted" style="margin-top:6px;">
+        Analyze email headers to detect the true source IP, authentication results, and mail server path.
+      </div>
+    </div>
+
+    <div class="top-actions" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <button class="btn btn-ghost" style="border-radius:999px; padding:10px 18px;" onclick="pgHdrOpenSettings()">API SETTINGS</button>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:14px; grid-template-columns: 420px 1fr; gap:16px;">
+    <!-- INPUT -->
+    <div class="panelcard">
+      <div class="panelcard-h">Header Input</div>
+      <div class="panelcard-s">Paste full raw email headers. The analyzer reconstructs route, validates auth, and performs reputation checks.</div>
+
+      <textarea id="pgHdrInput" class="textarea" placeholder="Paste raw email headers here..." style="min-height:340px;"></textarea>
+
+      <div class="row" style="margin-top:12px;">
+        <button class="btn" style="min-width:140px;" onclick="pgHdrAnalyze()">ANALYZE</button>
+      </div>
+
+      <div id="pgHdrNote" class="out" style="display:none; margin-top:12px; max-height:none;"></div>
+
+      <div class="panelcard" style="margin-top:12px; background: rgba(0,0,0,.14);">
+        <div class="panelcard-h">Provider Status</div>
+        <div class="kv" style="margin-top:10px;">
+          <div class="k">AbuseIPDB</div><div id="pgHdrStatusAbuse">—</div>
+          <div class="k">VirusTotal</div><div id="pgHdrStatusVT">—</div>
+          <div class="k">IPinfo</div><div id="pgHdrStatusIPI">—</div>
+          <div class="k">Online Enrichment</div><div id="pgHdrOnlineState">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <!-- OVERVIEW -->
+      <div class="panelcard">
+        <div class="panelcard-h">HEADER OVERVIEW</div>
+
+        <div id="pgHdrEmpty" class="out" style="margin-top:12px;">
+          Paste headers and click ANALYZE to generate origin IP forensics, authentication validation, relay timeline, and reputation intelligence.
+        </div>
+
+        <div id="pgHdrResult" style="display:none; margin-top:12px;">
+          <div class="grid-2" style="grid-template-columns: 1.3fr .9fr; gap:16px; align-items:stretch;">
+            <div class="panelcard" style="background: rgba(0,0,0,.12);">
+              <div id="pgHdrSenderName" style="font-weight:1000; font-size:24px; letter-spacing:.2px;">—</div>
+              <div style="margin-top:8px; font-size:14px; color:rgba(215,224,255,.88);">
+                From: <span id="pgHdrFromEmail" style="font-weight:900;">—</span>
+              </div>
+              <div style="margin-top:6px; font-size:14px; color:rgba(215,224,255,.82);">
+                Return-Path: <span id="pgHdrReturnPath">—</span>
+              </div>
+
+              <div class="panelcard" style="margin-top:16px; background: rgba(10,22,48,.30); padding:14px 16px;">
+                <div style="font-size:15px; color:rgba(170,190,235,.78);">True Origin IP</div>
+                <div style="margin-top:6px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                  <div id="pgHdrOriginIp" style="font-size:22px; font-weight:1000;">—</div>
+                  <div id="pgHdrOriginFlag" style="font-size:20px;"></div>
+                  <div id="pgHdrOriginCountry" class="tiny-muted"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panelcard" style="background: rgba(0,0,0,.10); display:flex; align-items:center; justify-content:center;">
+              <div class="pg-risk-ring-wrap">
+                <svg class="pg-risk-ring" viewBox="0 0 120 120">
+                  <circle class="pg-risk-bg" cx="60" cy="60" r="44"></circle>
+                  <circle id="pgHdrScoreRing" class="pg-risk-score low" cx="60" cy="60" r="44"></circle>
+                  <text id="pgHdrThreatText" x="60" y="50" text-anchor="middle" class="pg-risk-label">SAFE</text>
+                  <text id="pgHdrScoreBig" x="60" y="72" text-anchor="middle" class="pg-risk-big">0</text>
+                  <text id="pgHdrScoreSmall" x="60" y="90" text-anchor="middle" class="pg-risk-small">0 / 100</text>
+                </svg>
+                <div style="margin-top:12px; text-align:center;">
+                  <span id="pgHdrThreatBadge" class="pill" style="background: rgba(0,255,170,.10); border-color: rgba(0,255,170,.35);">SAFE</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AUTH -->
+          <div class="panelcard" style="margin-top:16px;">
+            <div class="panelcard-h">Authentication Summary</div>
+            <div class="grid-3" style="margin-top:12px; grid-template-columns: repeat(3, 1fr); gap:12px;">
+              <div class="pg-auth-box">
+                <div class="tiny-muted">SPF</div>
+                <div id="pgHdrSPF" class="pg-auth-pill unknown">UNKNOWN</div>
+              </div>
+              <div class="pg-auth-box">
+                <div class="tiny-muted">DKIM</div>
+                <div id="pgHdrDKIM" class="pg-auth-pill unknown">UNKNOWN</div>
+              </div>
+              <div class="pg-auth-box">
+                <div class="tiny-muted">DMARC</div>
+                <div id="pgHdrDMARC" class="pg-auth-pill unknown">UNKNOWN</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TIMELINE + REPUTATION -->
+          <div class="grid-2" style="margin-top:16px; grid-template-columns: 1.15fr .85fr; gap:16px;">
+            <div class="panelcard">
+              <div class="panelcard-h">Server Path Timeline</div>
+              <div id="pgHdrTimeline" class="pg-timeline" style="margin-top:12px;"></div>
+            </div>
+
+            <div>
+              <div class="panelcard">
+                <div class="panelcard-h">Reputation Intelligence</div>
+
+                <div class="grid-2" style="grid-template-columns: 1fr 1fr; gap:12px; margin-top:12px;">
+                  <div class="pg-intel-box">
+                    <div class="pg-intel-title">AbuseIPDB</div>
+                    <div class="kv" style="margin-top:10px;">
+                      <div class="k">Abuse Confidence</div><div id="pgHdrAbuseScore">—</div>
+                      <div class="k">Total Reports</div><div id="pgHdrAbuseReports">—</div>
+                      <div class="k">Verdict</div><div id="pgHdrAbuseVerdict">—</div>
+                    </div>
+                  </div>
+
+                  <div class="pg-intel-box">
+                    <div class="pg-intel-title">VirusTotal</div>
+                    <div class="kv" style="margin-top:10px;">
+                      <div class="k">Malicious</div><div id="pgHdrVTMal">—</div>
+                      <div class="k">Suspicious</div><div id="pgHdrVTSusp">—</div>
+                      <div class="k">Harmless</div><div id="pgHdrVTHarmless">—</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pg-intel-box" style="margin-top:12px;">
+                  <div class="pg-intel-title">IPinfo</div>
+                  <div class="kv" style="margin-top:10px;">
+                    <div class="k">Country</div><div id="pgHdrIPICountry">—</div>
+                    <div class="k">City</div><div id="pgHdrIPICity">—</div>
+                    <div class="k">ISP</div><div id="pgHdrIPIISP">—</div>
+                    <div class="k">ASN</div><div id="pgHdrIPIASN">—</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="panelcard" style="margin-top:16px;">
+                <div class="panelcard-h">Forensic Findings</div>
+                <ul id="pgHdrFindings" class="threat-bullets" style="margin-top:12px;"></ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="pgHdrSettingsOverlay" class="pg-overlay" style="display:none;">
+  <div class="pg-modal">
+    <div class="pg-modal-head">
+      <div>
+        <div class="pg-modal-title">API Settings</div>
+        <div class="pg-modal-sub">Provider keys stay on the backend. Missing keys disable that provider gracefully.</div>
+      </div>
+      <button class="pg-x" onclick="pgHdrCloseSettings()">✕</button>
+    </div>
+
+    <div class="pg-modal-body">
+      <div class="pg-panel">
+        <div class="pg-switch-row">
+          <label class="pg-switch">
+            <input id="pgHdrEnableOnline" type="checkbox" />
+            <span class="pg-slider"></span>
+          </label>
+          <div>
+            <div class="pg-switch-title">Enable online reputation lookup</div>
+            <div class="pg-switch-sub">Queries AbuseIPDB, VirusTotal, and IPinfo using backend-configured keys.</div>
+          </div>
+        </div>
+
+        <div class="kv" style="margin-top:16px;">
+          <div class="k">AbuseIPDB</div><div id="pgHdrCfgAbuse">—</div>
+          <div class="k">VirusTotal</div><div id="pgHdrCfgVT">—</div>
+          <div class="k">IPinfo</div><div id="pgHdrCfgIPI">—</div>
+        </div>
+
+        <div id="pgHdrSavedLine" class="muted" style="margin-top:14px; font-size:12px;">Not saved yet.</div>
+      </div>
+    </div>
+
+    <div class="pg-modal-foot">
+      <button class="btn" style="min-width:140px;" onclick="pgHdrSaveSettings()">SAVE</button>
+      <button class="btn btn-ghost" style="min-width:140px;" onclick="pgHdrCloseSettings()">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.pg-overlay{ position: fixed; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); display:flex; align-items:center; justify-content:center; z-index: 9999; }
+.pg-modal{ width: min(900px, 92vw); max-height: min(84vh, 760px); border-radius: 16px; border: 1px solid rgba(0,245,255,.18); background: linear-gradient(180deg, rgba(7,14,32,.96), rgba(5,10,24,.96)); box-shadow: 0 25px 80px rgba(0,0,0,.55); display:flex; flex-direction:column; overflow:hidden; }
+.pg-modal-head{ padding: 16px 18px; display:flex; align-items:flex-start; justify-content:space-between; gap:12px; border-bottom: 1px solid rgba(0,245,255,.12); }
+.pg-modal-title{ font-weight: 900; font-size: 20px; letter-spacing:.4px; }
+.pg-modal-sub{ margin-top:6px; color: rgba(170,190,235,.82); font-size: 13px; }
+.pg-x{ border: 1px solid rgba(0,245,255,.18); background: rgba(10,22,48,.55); color: rgba(215,224,255,.92); border-radius: 10px; padding: 8px 12px; cursor:pointer; }
+.pg-modal-body{ padding: 18px; overflow:auto; }
+.pg-panel{ border: 1px solid rgba(0,245,255,.12); border-radius: 16px; padding: 16px; background: rgba(10,22,48,.28); }
+.pg-switch-row{ display:flex; gap:14px; align-items:center; }
+.pg-switch-title{ font-weight: 800; color: rgba(215,224,255,.92); }
+.pg-switch-sub{ color: rgba(170,190,235,.78); font-size: 12px; margin-top:3px; }
+.pg-switch{ position: relative; display:inline-block; width: 52px; height: 28px; }
+.pg-switch input{ display:none; }
+.pg-slider{ position:absolute; inset:0; border-radius:999px; background: rgba(80,95,130,.45); border: 1px solid rgba(0,245,255,.18); transition: .2s; }
+.pg-slider:before{ content:""; position:absolute; width:22px; height:22px; left:3px; top:2px; background: rgba(215,224,255,.92); border-radius:50%; transition: .2s; }
+.pg-switch input:checked + .pg-slider{ background: rgba(0,245,255,.18); border-color: rgba(0,245,255,.35); }
+.pg-switch input:checked + .pg-slider:before{ transform: translateX(24px); background: rgba(0,245,255,.92); }
+.pg-modal-foot{ padding: 16px 18px; border-top: 1px solid rgba(0,245,255,.12); display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+
+.pg-risk-ring-wrap{ display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.pg-risk-ring{ width:250px; height:250px; display:block; }
+.pg-risk-bg{ fill:none; stroke: rgba(255,255,255,.10); stroke-width: 14; }
+.pg-risk-score{ fill:none; stroke-width: 10; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 60px 60px; }
+.pg-risk-score.low{ stroke: rgba(0,255,170,.95); }
+.pg-risk-score.med{ stroke: rgba(255,200,80,.95); }
+.pg-risk-score.high{ stroke: rgba(255,70,70,.95); }
+.pg-risk-label{ fill:#d7e0ff; font-weight:900; font-size: 13px; letter-spacing:.5px; }
+.pg-risk-big{ fill:#f6f8ff; font-weight:1000; font-size: 28px; }
+.pg-risk-small{ fill: rgba(142,162,214,.95); font-weight:900; font-size: 11px; }
+
+.pg-auth-box{
+  border:1px solid rgba(0,245,255,.12);
+  border-radius:14px;
+  background: rgba(10,22,48,.28);
+  padding:14px 16px;
+}
+.pg-auth-pill{
+  display:inline-flex;
+  margin-top:8px;
+  padding:6px 14px;
+  border-radius:999px;
+  font-weight:1000;
+  letter-spacing:.35px;
+  border:1px solid rgba(255,255,255,.12);
+}
+.pg-auth-pill.pass{ color:#cffff0; background: rgba(0,255,170,.10); border-color: rgba(0,255,170,.35); }
+.pg-auth-pill.fail{ color:#ffd5db; background: rgba(255,70,70,.10); border-color: rgba(255,70,70,.35); }
+.pg-auth-pill.softfail{ color:#ffe8b7; background: rgba(255,200,80,.10); border-color: rgba(255,200,80,.35); }
+.pg-auth-pill.unknown{ color:#d7e0ff; background: rgba(142,162,214,.10); border-color: rgba(142,162,214,.28); }
+
+.pg-timeline{ position:relative; padding-left:18px; }
+.pg-timeline:before{
+  content:"";
+  position:absolute;
+  left:9px;
+  top:0;
+  bottom:0;
+  width:2px;
+  background: linear-gradient(180deg, rgba(0,245,255,.35), rgba(255,70,70,.25));
+}
+.pg-hop{
+  position:relative;
+  margin-bottom:14px;
+  padding:12px 14px 12px 18px;
+  border-radius:14px;
+  border:1px solid rgba(0,245,255,.12);
+  background: rgba(10,22,48,.24);
+}
+.pg-hop:before{
+  content:"";
+  position:absolute;
+  left:-16px;
+  top:18px;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background: rgba(0,245,255,.85);
+  box-shadow: 0 0 0 4px rgba(0,245,255,.12);
+}
+.pg-hop.suspicious{
+  border-color: rgba(255,70,70,.28);
+  background: rgba(255,70,70,.06);
+}
+.pg-hop.suspicious:before{
+  background: rgba(255,70,70,.95);
+  box-shadow: 0 0 0 4px rgba(255,70,70,.12);
+}
+.pg-hop-title{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-weight:1000; }
+.pg-hop-meta{ margin-top:8px; color:rgba(215,224,255,.84); }
+.pg-hop-sub{ margin-top:6px; color:rgba(170,190,235,.78); font-size:12px; }
+
+.pg-intel-box{
+  border:1px solid rgba(0,245,255,.12);
+  border-radius:14px;
+  background: rgba(10,22,48,.24);
+  padding:14px 16px;
+}
+.pg-intel-title{
+  font-weight:1000;
+  font-size:15px;
+  letter-spacing:.2px;
+}
+</style>
+
+<script>
+const PG_HDR_SETTINGS_KEY = "privguard.settings.header.v2";
+
+function pgHdrToast(msg, isErr=false){
+  const el = document.getElementById("pgHdrNote");
+  el.style.display = "block";
+  el.style.color = "rgba(215,224,255,.92)";
+  el.style.borderColor = isErr ? "rgba(255,72,99,.55)" : "rgba(0,245,255,.22)";
+  el.style.background = isErr ? "rgba(255,72,99,.08)" : "rgba(0,0,0,.14)";
+  el.textContent = msg;
+  setTimeout(() => { el.style.display = "none"; }, 2600);
+}
+
+function pgHdrGetSettings(){
+  try{ return JSON.parse(localStorage.getItem(PG_HDR_SETTINGS_KEY) || "{}") || {}; }catch(e){ return {}; }
+}
+
+function pgHdrOpenSettings(){
+  const s = pgHdrGetSettings();
+  document.getElementById("pgHdrEnableOnline").checked = (s.enable_online !== undefined) ? !!s.enable_online : true;
+  document.getElementById("pgHdrSavedLine").textContent = s.saved_at ? ("Saved locally: " + s.saved_at) : "Not saved yet.";
+  document.getElementById("pgHdrSettingsOverlay").style.display = "flex";
+}
+function pgHdrCloseSettings(){
+  document.getElementById("pgHdrSettingsOverlay").style.display = "none";
+}
+function pgHdrSaveSettings(){
+  const enable_online = !!document.getElementById("pgHdrEnableOnline").checked;
+  localStorage.setItem(PG_HDR_SETTINGS_KEY, JSON.stringify({
+    enable_online,
+    saved_at: new Date().toLocaleString(),
+  }));
+  pgHdrPaintQuickStatus(null);
+  pgHdrToast("Settings saved.");
+  pgHdrCloseSettings();
+}
+
+function pgHdrPaintQuickStatus(providerStatus){
+  const s = pgHdrGetSettings();
+  const online = (s.enable_online !== undefined) ? !!s.enable_online : true;
+  document.getElementById("pgHdrOnlineState").textContent = online ? "Enabled" : "Disabled";
+
+  const ps = providerStatus || {};
+  document.getElementById("pgHdrStatusAbuse").textContent = ps.abuseipdb || "—";
+  document.getElementById("pgHdrStatusVT").textContent = ps.virustotal || "—";
+  document.getElementById("pgHdrStatusIPI").textContent = ps.ipinfo || "—";
+
+  document.getElementById("pgHdrCfgAbuse").textContent = ps.abuseipdb || "—";
+  document.getElementById("pgHdrCfgVT").textContent = ps.virustotal || "—";
+  document.getElementById("pgHdrCfgIPI").textContent = ps.ipinfo || "—";
+}
+
+function pgHdrAuthClass(v){
+  const x = String(v || "unknown").toLowerCase();
+  if (x === "pass") return "pass";
+  if (x === "fail") return "fail";
+  if (x === "softfail") return "softfail";
+  return "unknown";
+}
+
+function pgHdrSetAuth(elId, value){
+  const el = document.getElementById(elId);
+  const cls = pgHdrAuthClass(value);
+  el.className = "pg-auth-pill " + cls;
+  el.textContent = String(value || "unknown").toUpperCase();
+}
+
+function pgHdrSetRing(score, level){
+  const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
+  const lv = String(level || "SAFE").toUpperCase();
+  const color = lv === "HIGH" ? "high" : (lv === "MEDIUM" ? "med" : "low");
+
+  const circumference = 2 * Math.PI * 44;
+  const offset = circumference - (s / 100) * circumference;
+
+  const ring = document.getElementById("pgHdrScoreRing");
+  ring.style.strokeDasharray = `${circumference}`;
+  ring.style.strokeDashoffset = `${offset}`;
+  ring.classList.remove("low", "med", "high");
+  ring.classList.add(color);
+
+  document.getElementById("pgHdrThreatText").textContent = lv;
+  document.getElementById("pgHdrScoreBig").textContent = String(s);
+  document.getElementById("pgHdrScoreSmall").textContent = `${s} / 100`;
+
+  const badge = document.getElementById("pgHdrThreatBadge");
+  badge.textContent = lv;
+  badge.classList.remove("low","med","high");
+  badge.style.background = color === "high" ? "rgba(255,70,70,.10)" : (color === "med" ? "rgba(255,200,80,.10)" : "rgba(0,255,170,.10)");
+  badge.style.borderColor = color === "high" ? "rgba(255,70,70,.35)" : (color === "med" ? "rgba(255,200,80,.35)" : "rgba(0,255,170,.35)");
+}
+
+function pgHdrRenderTimeline(serverPath){
+  if (!Array.isArray(serverPath) || !serverPath.length){
+    return `<div class="tiny-muted">No Received chain available.</div>`;
+  }
+  return serverPath.map(h => `
+    <div class="pg-hop ${h.suspicious ? "suspicious" : ""}">
+      <div class="pg-hop-title">
+        <div>Hop ${h.hop}: ${h.ip || "—"} ${h.country_flag || ""}</div>
+        <div class="tiny-muted">${h.timestamp || "—"}</div>
+      </div>
+      <div class="pg-hop-meta">${h.hostname || "—"}</div>
+      <div class="pg-hop-sub">ISP: ${h.isp || "—"} • Delay: ${h.delay || "—"}</div>
+    </div>
+  `).join("");
+}
+
+function pgHdrRenderFindings(lines){
+  const arr = Array.isArray(lines) ? lines : [];
+  if (!arr.length){
+    return `<li>No major header anomalies detected.</li>`;
+  }
+  return arr.slice(0, 6).map(x => `<li>${x}</li>`).join("");
+}
+
+async function pgHdrAnalyze(){
+  const headers = (document.getElementById("pgHdrInput").value || "").trim();
+  if (!headers){
+    pgHdrToast("Paste raw headers first.", true);
+    return;
+  }
+
+  document.getElementById("pgHdrResult").style.display = "none";
+  document.getElementById("pgHdrEmpty").style.display = "block";
+  pgHdrToast("Analyzing headers...");
+
+  const s = pgHdrGetSettings();
+  const enable_online = (s.enable_online !== undefined) ? !!s.enable_online : true;
+
+  const r = await fetch("/api/header", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ headers, enable_online })
+  });
+
+  const data = await r.json();
+  if (!r.ok || data.error){
+    pgHdrToast(data.error || "Analysis failed.", true);
+    return;
+  }
+
+  const hr = data.header_result || {};
+  const rep = hr.reputation || {};
+  const auth = hr.auth_results || {};
+  const ps = hr.provider_status || data.provider_status || {};
+
+  document.getElementById("pgHdrEmpty").style.display = "none";
+  document.getElementById("pgHdrResult").style.display = "block";
+
+  pgHdrPaintQuickStatus(ps);
+
+  document.getElementById("pgHdrSenderName").textContent = hr.sender_display_name || "Unknown Sender";
+  document.getElementById("pgHdrFromEmail").textContent = hr.from_email || "—";
+  document.getElementById("pgHdrReturnPath").textContent = hr.return_path || "—";
+  document.getElementById("pgHdrOriginIp").textContent = hr.true_origin_ip || "—";
+  document.getElementById("pgHdrOriginFlag").textContent = (rep.ipinfo || {}).country_flag || "";
+  document.getElementById("pgHdrOriginCountry").textContent = (rep.ipinfo || {}).country || "";
+
+  pgHdrSetRing(hr.overall_score || 0, hr.threat_level || "SAFE");
+
+  pgHdrSetAuth("pgHdrSPF", auth.spf || "unknown");
+  pgHdrSetAuth("pgHdrDKIM", auth.dkim || "unknown");
+  pgHdrSetAuth("pgHdrDMARC", auth.dmarc || "unknown");
+
+  document.getElementById("pgHdrTimeline").innerHTML = pgHdrRenderTimeline(hr.server_path || []);
+  document.getElementById("pgHdrFindings").innerHTML = pgHdrRenderFindings(hr.forensic_findings || []);
+
+  document.getElementById("pgHdrAbuseScore").textContent = rep.abuseipdb?.abuse_confidence_score ?? "—";
+  document.getElementById("pgHdrAbuseReports").textContent = rep.abuseipdb?.total_reports ?? "—";
+  document.getElementById("pgHdrAbuseVerdict").textContent = rep.abuseipdb?.verdict ?? "—";
+
+  document.getElementById("pgHdrVTMal").textContent = rep.virustotal?.malicious_detections ?? "—";
+  document.getElementById("pgHdrVTSusp").textContent = rep.virustotal?.suspicious_detections ?? "—";
+  document.getElementById("pgHdrVTHarmless").textContent = rep.virustotal?.harmless_votes ?? "—";
+
+  const flag = rep.ipinfo?.country_flag ? (rep.ipinfo.country_flag + " ") : "";
+  document.getElementById("pgHdrIPICountry").textContent = flag + (rep.ipinfo?.country || "—");
+  document.getElementById("pgHdrIPICity").textContent = rep.ipinfo?.city || "—";
+  document.getElementById("pgHdrIPIISP").textContent = rep.ipinfo?.isp || "—";
+  document.getElementById("pgHdrIPIASN").textContent = rep.ipinfo?.asn || "—";
+
+  pgHdrToast("Header analysis complete.");
+}
+
+pgHdrPaintQuickStatus(null);
+</script>

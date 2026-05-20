@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PrivGuard Admin Login</title>
+  <style>
+    :root{
+      --bg:#040814; --bg2:#081120; --panel:rgba(10,18,34,.88); --line:rgba(0,245,255,.16);
+      --text:#edf6ff; --muted:#96abc8; --cyan:#00f5ff; --green:#00ff9c; --red:#ff637d;
+      --shadow:0 24px 80px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box;} html,body{height:100%;}
+    body{
+      margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;color:var(--text);
+      background:
+        radial-gradient(circle at 18% 18%, rgba(0,245,255,.10), transparent 24%),
+        radial-gradient(circle at 82% 78%, rgba(0,255,156,.08), transparent 22%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      overflow:hidden;
+    }
+    .admin-auth-shell{position:relative;min-height:100vh;display:grid;grid-template-columns:1.08fr .92fr;gap:24px;padding:24px;}
+    .admin-auth-grid{
+      position:absolute;inset:0;
+      background-image:linear-gradient(rgba(0,245,255,.05) 1px, transparent 1px),linear-gradient(90deg, rgba(0,245,255,.05) 1px, transparent 1px);
+      background-size:44px 44px;opacity:.18;mask-image: radial-gradient(circle at center, black 42%, transparent 100%);pointer-events:none;
+    }
+    .glow{position:absolute;border-radius:999px;filter:blur(84px);opacity:.20;pointer-events:none;}
+    .glow-a{width:380px;height:380px;background:rgba(0,245,255,.22);top:4%;left:4%;}
+    .glow-b{width:360px;height:360px;background:rgba(0,255,156,.16);right:6%;bottom:6%;}
+    .left-wrap,.right-wrap{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 48px);}
+    .left-card,.login-card{
+      width:100%;border-radius:30px;border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(8,18,36,.62), rgba(4,10,20,.88));
+      backdrop-filter:blur(18px);box-shadow:var(--shadow);position:relative;overflow:hidden;
+    }
+    .left-card{max-width:760px;min-height:760px;padding:40px;display:flex;flex-direction:column;justify-content:space-between;}
+    .login-card{max-width:560px;padding:32px;}
+    .brand{display:flex;align-items:center;gap:16px;}
+    .brand-mark{width:70px;height:70px;border-radius:20px;display:grid;place-items:center;color:var(--cyan);background:rgba(0,245,255,.08);border:1px solid rgba(0,245,255,.22);font-size:32px;}
+    .brand h1{margin:0;font-size:3rem;font-weight:900;}
+    .brand p{margin:8px 0 0;color:var(--muted);}
+    .hero-copy h2{margin:0;max-width:600px;font-size:3.1rem;line-height:1.1;font-weight:900;}
+    .hero-copy p{margin:18px 0 0;max-width:620px;color:var(--muted);line-height:1.75;font-size:1.04rem;}
+    .feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px;}
+    .feature-pill{padding:14px 16px;border-radius:16px;border:1px solid rgba(0,245,255,.12);background:rgba(0,0,0,.16);color:#dce8ff;font-weight:700;}
+    .trust-line{display:flex;align-items:center;gap:10px;color:#d7fff1;font-weight:700;}
+    .trust-dot{width:11px;height:11px;border-radius:50%;background:var(--green);box-shadow:0 0 14px var(--green);}
+    .card-head{text-align:center;margin-bottom:24px;}
+    .card-icon{width:78px;height:78px;border-radius:22px;margin:0 auto 14px;display:grid;place-items:center;font-size:34px;color:var(--cyan);background:rgba(0,245,255,.08);border:1px solid rgba(0,245,255,.22);}
+    .card-head h2{margin:0;font-size:2rem;font-weight:900;}
+    .card-head p{margin:10px 0 0;color:var(--muted);line-height:1.6;}
+    .field{margin-bottom:16px;}
+    .field label{display:block;margin-bottom:8px;font-size:.95rem;font-weight:700;color:#e6f2ff;}
+    .input-wrap{position:relative;display:flex;align-items:center;}
+    .input-icon{position:absolute;left:14px;color:#8fa6ca;pointer-events:none;font-size:15px;}
+    .input{width:100%;height:58px;border-radius:16px;border:1px solid rgba(0,245,255,.12);outline:none;background:rgba(4,10,22,.62);color:var(--text);padding:0 96px 0 46px;font-size:1rem;}
+    .input::placeholder{color:#7d93b7;}
+    .toggle-btn{position:absolute;right:10px;border:none;background:rgba(0,245,255,.08);color:#dcffff;padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer;}
+    .error{min-height:18px;margin-top:6px;color:var(--red);font-size:.84rem;}
+    .note{margin:12px 0 18px;padding:14px 16px;border-radius:16px;border:1px solid rgba(0,245,255,.12);background:rgba(0,0,0,.16);color:#cfe2ff;font-size:.92rem;line-height:1.6;}
+    .submit-btn{width:100%;height:58px;border:none;border-radius:16px;cursor:pointer;font-size:1rem;font-weight:900;color:#dcfff5;display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(90deg, rgba(0,255,156,.22), rgba(0,245,255,.16));border:1px solid rgba(0,255,156,.22);}
+    .submit-btn:disabled{opacity:.56;cursor:not-allowed;}
+    .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.18);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:none;}
+    .message{margin-top:14px;padding:12px 14px;border-radius:14px;border:1px solid transparent;font-size:.92rem;display:none;}
+    .message.error{display:block;background:rgba(255,99,125,.10);color:#ffd8de;border-color:rgba(255,99,125,.20);}
+    .message.success{display:block;background:rgba(0,255,156,.09);color:#d8fff2;border-color:rgba(0,255,156,.18);}
+    .foot-note{margin-top:16px;text-align:center;color:var(--muted);font-size:.92rem;line-height:1.6;}
+    .foot-note code{color:#9ceaff;background:rgba(0,245,255,.08);padding:2px 6px;border-radius:8px;border:1px solid rgba(0,245,255,.10);}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    @media (max-width:980px){body{overflow:auto;}.admin-auth-shell{grid-template-columns:1fr;min-height:auto;}.left-wrap,.right-wrap{min-height:auto;}.left-card{min-height:auto;}}
+  </style>
+</head>
+<body>
+  <div class="admin-auth-grid"></div>
+  <div class="glow glow-a"></div>
+  <div class="glow glow-b"></div>
+
+  <div class="admin-auth-shell">
+    <section class="left-wrap">
+      <div class="left-card">
+        <div class="brand">
+          <div class="brand-mark">🛡</div>
+          <div>
+            <h1>PrivGuard</h1>
+            <p>Private Administrative Control Plane</p>
+          </div>
+        </div>
+
+        <div class="hero-copy">
+          <h2>Restricted admin access for platform control and security operations.</h2>
+          <p>
+            This console is isolated from the public PrivGuard workspace.
+            Only approved administrators should authenticate here to manage users,
+            inspect activity, review platform events, and access privileged controls.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-pill">User Management</div>
+            <div class="feature-pill">Activity Monitoring</div>
+            <div class="feature-pill">Threat Visibility</div>
+            <div class="feature-pill">Security Audit Trail</div>
+            <div class="feature-pill">System Health</div>
+            <div class="feature-pill">Restricted Access</div>
+          </div>
+        </div>
+
+        <div class="trust-line">
+          <span class="trust-dot"></span>
+          <span>Private route isolation • session protection • admin-only access</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="right-wrap">
+      <div class="login-card">
+        <div class="card-head">
+          <div class="card-icon">🔐</div>
+          <h2>Admin Login</h2>
+          <p>Authenticate with your approved administrator account.</p>
+        </div>
+
+        <form id="adminLoginForm" novalidate>
+          <div class="field">
+            <label for="adminEmail">Admin Email</label>
+            <div class="input-wrap">
+              <span class="input-icon">✉</span>
+              <input id="adminEmail" class="input" type="email" placeholder="Enter admin email" autocomplete="username">
+            </div>
+            <div class="error" id="adminEmailError"></div>
+          </div>
+
+          <div class="field">
+            <label for="adminPassword">Password</label>
+            <div class="input-wrap">
+              <span class="input-icon">🔒</span>
+              <input id="adminPassword" class="input" type="password" placeholder="Enter admin password" autocomplete="current-password">
+              <button type="button" class="toggle-btn" id="togglePasswordBtn">Show</button>
+            </div>
+            <div class="error" id="adminPasswordError"></div>
+          </div>
+
+          <div class="note">
+            This login is for the private admin console only.
+            It is not part of the normal PrivGuard tool navigation.
+          </div>
+
+          <button id="adminLoginBtn" class="submit-btn" type="submit">
+            <span id="adminLoginBtnText">Access Admin Console</span>
+            <span class="spinner" id="adminLoginSpinner"></span>
+          </button>
+
+          <div id="adminLoginMessage" class="message"></div>
+
+          <div class="foot-note">
+            Private admin access uses <code>/admin/login</code>.
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const adminLoginForm = document.getElementById("adminLoginForm");
+    const adminEmail = document.getElementById("adminEmail");
+    const adminPassword = document.getElementById("adminPassword");
+    const adminEmailError = document.getElementById("adminEmailError");
+    const adminPasswordError = document.getElementById("adminPasswordError");
+    const adminLoginBtn = document.getElementById("adminLoginBtn");
+    const adminLoginBtnText = document.getElementById("adminLoginBtnText");
+    const adminLoginSpinner = document.getElementById("adminLoginSpinner");
+    const adminLoginMessage = document.getElementById("adminLoginMessage");
+    const togglePasswordBtn = document.getElementById("togglePasswordBtn");
+
+    function clearErrors() {
+      adminEmailError.textContent = "";
+      adminPasswordError.textContent = "";
+      adminLoginMessage.className = "message";
+      adminLoginMessage.textContent = "";
+      adminLoginMessage.style.display = "none";
+    }
+
+    function showMessage(type, text) {
+      adminLoginMessage.className = "message " + type;
+      adminLoginMessage.textContent = text;
+      adminLoginMessage.style.display = "block";
+    }
+
+    function setLoading(loading) {
+      adminLoginBtn.disabled = loading;
+      adminLoginSpinner.style.display = loading ? "inline-block" : "none";
+      adminLoginBtnText.textContent = loading ? "Please wait..." : "Access Admin Console";
+    }
+
+    function validEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    togglePasswordBtn.addEventListener("click", () => {
+      const hidden = adminPassword.type === "password";
+      adminPassword.type = hidden ? "text" : "password";
+      togglePasswordBtn.textContent = hidden ? "Hide" : "Show";
+    });
+
+    adminLoginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearErrors();
+
+      const email = (adminEmail.value || "").trim().toLowerCase();
+      const password = adminPassword.value || "";
+      let hasError = false;
+
+      if (!email) {
+        adminEmailError.textContent = "Admin email is required.";
+        hasError = true;
+      } else if (!validEmail(email)) {
+        adminEmailError.textContent = "Enter a valid email address.";
+        hasError = true;
+      }
+
+      if (!password) {
+        adminPasswordError.textContent = "Password is required.";
+        hasError = true;
+      }
+
+      if (hasError) return;
+      setLoading(true);
+
+      try {
+        const res = await fetch("/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.ok) {
+          showMessage("error", data.error || "Admin login failed.");
+          return;
+        }
+
+        showMessage("success", "Authentication successful. Redirecting...");
+        window.location.href = data.redirect_url || "/admin";
+      } catch (err) {
+        showMessage("error", "Admin login failed. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>

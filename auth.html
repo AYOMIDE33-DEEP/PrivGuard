@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PrivGuard • Secure Access</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+  <style>
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .pg-auth-shell {
+      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .pg-auth-layout {
+      min-height: 100vh;
+      height: 100vh;
+      align-items: stretch;
+    }
+
+    .pg-auth-right-full {
+      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
+      align-items: stretch !important;
+    }
+
+    .pg-form-shell-full {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .pg-auth-card {
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .pg-auth-card-signup {
+      height: min(92vh, 900px);
+      max-height: min(92vh, 900px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 8px;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+    }
+
+    .pg-auth-card-signup::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .pg-auth-card-signup::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.04);
+      border-radius: 999px;
+    }
+
+    .pg-auth-card-signup::-webkit-scrollbar-thumb {
+      background: rgba(0,245,255,0.35);
+      border-radius: 999px;
+    }
+
+    @media (max-width: 900px) {
+      html, body {
+        overflow: auto;
+      }
+
+      .pg-auth-shell,
+      .pg-auth-layout,
+      .pg-auth-right-full,
+      .pg-form-shell-full {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+      }
+
+      .pg-auth-card-signup {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pg-auth-shell">
+    <div class="pg-auth-grid"></div>
+    <div class="pg-auth-glow pg-auth-glow-a"></div>
+    <div class="pg-auth-glow pg-auth-glow-b"></div>
+
+    <div class="pg-auth-layout">
+      <!-- LEFT PANEL -->
+      <section class="pg-auth-left">
+        <div class="pg-left-card">
+          <div class="pg-brand">
+            <div class="pg-brand-icon">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L20 5V11C20 16 16.6 20.4 12 22C7.4 20.4 4 16 4 11V5L12 2Z" stroke="currentColor" stroke-width="1.8"/>
+                <path d="M9.3 12.1L11.2 14L15.2 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h1>PrivGuard</h1>
+              <p>Cybersecurity Toolkit Platform</p>
+            </div>
+          </div>
+
+          <div class="pg-left-copy">
+            <h2>Protect your digital privacy with PrivGuard.</h2>
+            <p>
+              Secure access to your Email Scanner, Email Header Analyzer, File Scanner,
+              Phishing URL Checker, IP Reputation Tool, and Security Dashboard.
+            </p>
+          </div>
+
+          <div class="pg-feature-grid">
+            <div class="pg-feature-pill">Email Scanner</div>
+            <div class="pg-feature-pill">Header Analyzer</div>
+            <div class="pg-feature-pill">File Scanner</div>
+            <div class="pg-feature-pill">Phishing URL Checker</div>
+            <div class="pg-feature-pill">IP Reputation Tool</div>
+            <div class="pg-feature-pill">Security Dashboard</div>
+          </div>
+
+          <div class="pg-left-trust">
+            <span class="pg-trust-dot"></span>
+            Protected by advanced identity and security verification
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT PANEL -->
+      <section class="pg-auth-right pg-auth-right-full">
+        <div class="pg-form-shell pg-form-shell-full">
+          <div class="pg-view-switch">
+            <button type="button" id="showLoginBtn" class="pg-switch-btn active">Login</button>
+            <button type="button" id="showSignupBtn" class="pg-switch-btn">Signup</button>
+          </div>
+
+          <!-- LOGIN -->
+          <div id="loginView" class="pg-auth-card active">
+            <div class="pg-card-head">
+              <div class="pg-card-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L20 5V11C20 16 16.6 20.4 12 22C7.4 20.4 4 16 4 11V5L12 2Z" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+              </div>
+              <h2>Secure Access to PrivGuard</h2>
+              <p>Login to access your cybersecurity tools</p>
+            </div>
+
+            <form id="loginForm" novalidate>
+              <div class="pg-field">
+                <label for="loginEmail">Email</label>
+                <div class="pg-input-wrap">
+                  <span class="pg-input-icon">✉</span>
+                  <input id="loginEmail" type="email" placeholder="Enter your email" autocomplete="email">
+                </div>
+                <div class="pg-error" id="loginEmailError"></div>
+              </div>
+
+              <div class="pg-field">
+                <label for="loginPassword">Password</label>
+                <div class="pg-input-wrap">
+                  <span class="pg-input-icon">🔒</span>
+                  <input id="loginPassword" type="password" placeholder="Enter your password" autocomplete="current-password">
+                  <button type="button" class="pg-toggle-btn" data-toggle="#loginPassword">Show</button>
+                </div>
+                <div class="pg-error" id="loginPasswordError"></div>
+              </div>
+
+              <div class="pg-inline-row">
+                <button type="button" id="forgotPasswordBtn" class="pg-text-link">Forgot Password?</button>
+              </div>
+
+              <button id="loginBtn" type="submit" class="pg-primary-btn">
+                <span class="pg-btn-text">Login</span>
+                <span class="pg-spinner hidden"></span>
+              </button>
+
+              <div id="loginMessage" class="pg-message hidden"></div>
+
+              <div class="pg-foot-note">
+                Don’t have an account?
+                <button type="button" id="goSignup" class="pg-text-link inline">Create Account</button>
+              </div>
+
+              <div class="pg-trust-message">
+                Your account is protected by advanced security verification.
+              </div>
+            </form>
+          </div>
+
+          <!-- SIGNUP -->
+          <div id="signupView" class="pg-auth-card pg-auth-card-signup">
+            <div class="pg-card-head">
+              <div class="pg-card-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M12 2L20 5V11C20 16 16.6 20.4 12 22C7.4 20.4 4 16 4 11V5L12 2Z" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+              </div>
+              <h2>Create Your PrivGuard Account</h2>
+              <p>Create secure access for your cybersecurity toolkit</p>
+            </div>
+
+            <form id="signupForm" novalidate>
+              <div class="pg-field">
+                <label for="signupName">Full Name</label>
+                <div class="pg-input-wrap">
+                  <span class="pg-input-icon">👤</span>
+                  <input id="signupName" type="text" placeholder="Enter your full name" autocomplete="name">
+                </div>
+                <div class="pg-error" id="signupNameError"></div>
+              </div>
+
+              <div class="pg-field">
+                <label for="signupEmail">Email Address</label>
+                <div class="pg-input-wrap">
+                  <span class="pg-input-icon">✉</span>
+                  <input id="signupEmail" type="email" placeholder="Enter your email address" autocomplete="email">
+                </div>
+                <div class="pg-error" id="signupEmailError"></div>
+              </div>
+
+              <div class="pg-field">
+                <label for="signupPassword">Password</label>
+                <div class="pg-input-wrap">
+                  <span class="pg-input-icon">🔒</span>
+                  <input id="signupPassword" type="password" placeholder="Create password" autocomplete="new-password">
+                  <button type="button" class="pg-toggle-btn" data-toggle="#signupPassword">Show</button>
+                </div>
+
+                <div class="pg-strength-wrap">
+                  <div class="pg-strength-bars">
+                    <span></span><span></span><span></span><span></span><span></span>
+                  </div>
+                  <div id="strengthLabel" class="pg-strength-label">Very weak</div>
+                </div>
+
+                <div class="pg-error" id="signupPasswordError"></div>
+              </div>
+
+              <div class="pg-field">
+                <label for="signupConfirmPassword">Confirm Password</label>
+                <div class="pg-input-wrap">
+                  <span class="pg-input-icon">🔐</span>
+                  <input id="signupConfirmPassword" type="password" placeholder="Confirm password" autocomplete="new-password">
+                  <button type="button" class="pg-toggle-btn" data-toggle="#signupConfirmPassword">Show</button>
+                </div>
+                <div class="pg-error" id="signupConfirmPasswordError"></div>
+              </div>
+
+              <div class="pg-captcha-box">
+                <div class="pg-captcha-title">Verify Human</div>
+                <div
+                  class="g-recaptcha"
+                  data-sitekey="6LeCoocsAAAAAPhJ-1VxxfbgvVtIcD2gKl587Ewm"
+                  data-callback="onRecaptchaSuccess"
+                  data-expired-callback="onRecaptchaExpired"
+                  data-error-callback="onRecaptchaExpired">
+                </div>
+                <div class="pg-error" id="captchaError"></div>
+              </div>
+
+              <label class="pg-check">
+                <input id="termsCheck" type="checkbox">
+                <span>I agree to the Terms of Service and Privacy Policy</span>
+              </label>
+              <div class="pg-error" id="termsError"></div>
+
+              <button id="signupBtn" type="submit" class="pg-primary-btn" disabled>
+                <span class="pg-btn-text">Create Account</span>
+                <span class="pg-spinner hidden"></span>
+              </button>
+
+              <div id="signupMessage" class="pg-message hidden"></div>
+
+              <div class="pg-foot-note">
+                Already have an account?
+                <button type="button" id="goLogin" class="pg-text-link inline">Login</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>

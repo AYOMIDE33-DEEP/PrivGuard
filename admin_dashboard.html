@@ -1,0 +1,134 @@
+```html
+<div class="admin-shell">
+
+  <div class="admin-top">
+    <div>
+      <div class="admin-eyebrow">PrivGuard • Administrative Control</div>
+      <h2 class="admin-title">Admin Security Operations Center</h2>
+    </div>
+
+    <div class="admin-live">
+      <span class="live-dot"></span>
+      <span>Real-time Monitoring</span>
+    </div>
+  </div>
+
+  <div class="admin-kpi-grid">
+
+    <div class="admin-card">
+      <div>Total Users</div>
+      <div id="totalUsers">--</div>
+    </div>
+
+    <div class="admin-card">
+      <div>Active Users Today</div>
+      <div id="activeUsers">--</div>
+    </div>
+
+    <div class="admin-card danger">
+      <div>High Risk Threats</div>
+      <div id="highThreats">--</div>
+    </div>
+
+    <div class="admin-card">
+      <div>Total Scans</div>
+      <div id="totalScans">--</div>
+    </div>
+
+    <div class="admin-card">
+      <div>Emails Sent</div>
+      <div id="emailsSent">--</div>
+    </div>
+
+  </div>
+
+  <div class="admin-grid">
+
+    <div class="admin-panel">
+      <h3>Users</h3>
+      <div id="usersTable"></div>
+    </div>
+
+    <div class="admin-panel">
+      <h3>Threat Reports</h3>
+      <div id="threatTable"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+.admin-shell{
+  width:100%;
+  padding:20px;
+}
+
+.admin-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.admin-title{
+  font-size:24px;
+  font-weight:900;
+}
+
+.admin-kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  margin-bottom:20px;
+}
+
+.admin-card{
+  padding:20px;
+  border-radius:18px;
+  background:rgba(0,245,255,.05);
+  border:1px solid rgba(0,245,255,.12);
+}
+
+.admin-card.danger{
+  border-color:rgba(255,72,99,.25);
+}
+
+.admin-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+.admin-panel{
+  padding:18px;
+  border-radius:18px;
+  background:rgba(0,0,0,.2);
+  border:1px solid rgba(0,245,255,.08);
+}
+
+.live-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#00ff9c;
+  display:inline-block;
+}
+</style>
+
+<script>
+async function loadAdminStats(){
+  const r = await fetch("/api/admin/stats");
+  const j = await r.json();
+
+  document.getElementById("totalUsers").textContent = j.total_users;
+  document.getElementById("activeUsers").textContent = j.active_today;
+  document.getElementById("highThreats").textContent = j.high_risk;
+  document.getElementById("totalScans").textContent = j.total_scans;
+  document.getElementById("emailsSent").textContent = j.emails_sent;
+}
+
+loadAdminStats();
+setInterval(loadAdminStats,5000);
+</script>
+```

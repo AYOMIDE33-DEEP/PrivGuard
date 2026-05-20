@@ -1,0 +1,1163 @@
+<div class="pg-email-shell">
+  <div class="pg-email-topbar">
+    <div>
+      <h2 class="pg-email-title">Email Center</h2>
+      <div class="pg-email-subtitle">Compose, send, save drafts, and manage emails inside PrivGuard.</div>
+    </div>
+
+    <div class="pg-email-top-actions">
+      <button class="pg-email-btn" onclick="pgEmailOpenTab('compose')">Compose Email</button>
+      <button class="pg-email-btn" onclick="pgEmailOpenTab('inbox')">Inbox</button>
+      <button class="pg-email-btn" onclick="pgEmailOpenTab('sent')">Sent</button>
+      <button class="pg-email-btn" onclick="pgEmailOpenTab('drafts')">Drafts</button>
+    </div>
+  </div>
+
+  <div class="pg-email-layout">
+    <aside class="pg-email-sidebar">
+      <div class="pg-email-side-head">Email Center</div>
+
+      <button id="pgTabCompose" class="pg-email-side-link active" onclick="pgEmailOpenTab('compose')">
+        <span>✉</span><span>Compose Email</span>
+      </button>
+
+      <button id="pgTabInbox" class="pg-email-side-link" onclick="pgEmailOpenTab('inbox')">
+        <span>📥</span><span>Inbox</span>
+      </button>
+
+      <button id="pgTabSent" class="pg-email-side-link" onclick="pgEmailOpenTab('sent')">
+        <span>📤</span><span>Sent</span>
+      </button>
+
+      <button id="pgTabDrafts" class="pg-email-side-link" onclick="pgEmailOpenTab('drafts')">
+        <span>📝</span><span>Drafts</span>
+      </button>
+
+      <div class="pg-email-side-card">
+        <div class="pg-email-side-card-title">Status</div>
+        <div id="pgEmailStatusLine" class="pg-email-side-card-text">Ready</div>
+      </div>
+    </aside>
+
+    <section class="pg-email-main">
+      <div id="pgEmailToast" class="pg-email-toast" style="display:none;"></div>
+
+      <!-- COMPOSE -->
+      <div id="pgEmailComposeView" class="pg-email-view">
+        <div class="pg-email-card">
+          <div class="pg-email-card-head">
+            <div>
+              <div class="pg-email-card-title">Compose Email</div>
+              <div class="pg-email-card-sub">Secure email composition with sender checks, attachment controls, and draft saving.</div>
+            </div>
+            <div class="pg-email-inline-status" id="pgDraftState">Draft not saved yet</div>
+          </div>
+
+          <div class="pg-email-form-grid">
+            <div class="pg-email-field full">
+              <label>From</label>
+              <input id="pgFrom" class="pg-email-input" type="email" readonly />
+            </div>
+
+            <div class="pg-email-field full">
+              <label>To</label>
+              <input id="pgTo" class="pg-email-input" type="text" placeholder="recipient@example.com, second@example.com" />
+            </div>
+
+            <div class="pg-email-field">
+              <label>CC</label>
+              <input id="pgCc" class="pg-email-input" type="text" placeholder="Optional" />
+            </div>
+
+            <div class="pg-email-field">
+              <label>BCC</label>
+              <input id="pgBcc" class="pg-email-input" type="text" placeholder="Optional" />
+            </div>
+
+            <div class="pg-email-field full">
+              <label>Subject</label>
+              <input id="pgSubject" class="pg-email-input" type="text" placeholder="Enter email subject" />
+            </div>
+          </div>
+
+          <div class="pg-editor-wrap">
+            <div class="pg-editor-toolbar">
+              <button type="button" class="pg-editor-btn" onclick="pgExecCmd('bold')"><b>B</b></button>
+              <button type="button" class="pg-editor-btn" onclick="pgExecCmd('italic')"><i>I</i></button>
+              <button type="button" class="pg-editor-btn" onclick="pgExecCmd('underline')"><u>U</u></button>
+              <button type="button" class="pg-editor-btn" onclick="pgExecCmd('insertUnorderedList')">• List</button>
+              <button type="button" class="pg-editor-btn" onclick="pgInsertLink()">Link</button>
+              <button type="button" class="pg-editor-btn" onclick="pgExecCmd('formatBlock', 'p')">Paragraph</button>
+            </div>
+
+            <div id="pgMessage" class="pg-editor" contenteditable="true" spellcheck="true"></div>
+
+            <div class="pg-editor-foot">
+              <div id="pgCharCounter">0 characters</div>
+              <div id="pgSecurityWarningMini" class="pg-security-mini">No security warning</div>
+            </div>
+          </div>
+
+          <div class="pg-email-attachment-box"
+               id="pgDropZone"
+               ondragover="pgDropOver(event)"
+               ondragleave="pgDropLeave(event)"
+               ondrop="pgDropFiles(event)">
+            <div class="pg-attach-title">Attachments</div>
+            <div class="pg-attach-sub">Drag and drop files here or choose files manually. Allowed: PDF, DOCX, images, ZIP.</div>
+
+            <div class="pg-attach-actions">
+              <input id="pgAttachInput" type="file" multiple hidden
+                     accept=".pdf,.docx,.png,.jpg,.jpeg,.gif,.webp,.zip"
+                     onchange="pgHandleAttachInput(event)">
+              <button class="pg-email-btn" type="button" onclick="document.getElementById('pgAttachInput').click()">Add Attachment</button>
+            </div>
+
+            <div id="pgUploadProgressWrap" class="pg-upload-progress-wrap" style="display:none;">
+              <div class="pg-upload-progress-bar">
+                <div id="pgUploadProgressBar"></div>
+              </div>
+              <div id="pgUploadProgressText" class="pg-upload-progress-text">Uploading...</div>
+            </div>
+
+            <div id="pgAttachmentList" class="pg-attachment-list"></div>
+          </div>
+
+          <div id="pgSecurityWarnings" class="pg-security-warnings" style="display:none;"></div>
+
+          <div class="pg-email-actions">
+            <button class="pg-email-btn secondary" type="button" onclick="pgSaveDraftManual()">Save Draft</button>
+            <button id="pgSendBtn" class="pg-email-btn primary" type="button" onclick="pgSendEmail()">Send Email</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- INBOX -->
+      <div id="pgEmailInboxView" class="pg-email-view" style="display:none;">
+        <div class="pg-email-card">
+          <div class="pg-email-card-head">
+            <div>
+              <div class="pg-email-card-title">Inbox</div>
+              <div class="pg-email-card-sub">Incoming messages available in your connected mail source.</div>
+            </div>
+            <button class="pg-email-btn" onclick="pgLoadFolder('inbox')">Refresh</button>
+          </div>
+          <div id="pgInboxList" class="pg-list-wrap"></div>
+        </div>
+      </div>
+
+      <!-- SENT -->
+      <div id="pgEmailSentView" class="pg-email-view" style="display:none;">
+        <div class="pg-email-card">
+          <div class="pg-email-card-head">
+            <div>
+              <div class="pg-email-card-title">Sent Emails</div>
+              <div class="pg-email-card-sub">Emails sent successfully from PrivGuard.</div>
+            </div>
+            <button class="pg-email-btn" onclick="pgLoadFolder('sent')">Refresh</button>
+          </div>
+          <div id="pgSentList" class="pg-list-wrap"></div>
+        </div>
+      </div>
+
+      <!-- DRAFTS -->
+      <div id="pgEmailDraftsView" class="pg-email-view" style="display:none;">
+        <div class="pg-email-card">
+          <div class="pg-email-card-head">
+            <div>
+              <div class="pg-email-card-title">Drafts</div>
+              <div class="pg-email-card-sub">Saved drafts from your Email Center.</div>
+            </div>
+            <button class="pg-email-btn" onclick="pgLoadFolder('drafts')">Refresh</button>
+          </div>
+          <div id="pgDraftsList" class="pg-list-wrap"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<style>
+.pg-email-shell{
+  width:100%;
+  max-width:1500px;
+  min-height:calc(100vh - 24px);
+  padding:18px;
+  border-radius:26px;
+  border:1px solid rgba(0,245,255,.12);
+  background:
+    radial-gradient(circle at 82% 14%, rgba(255,72,99,.06), transparent 22%),
+    radial-gradient(circle at 18% 86%, rgba(0,245,255,.08), transparent 24%),
+    linear-gradient(180deg, rgba(6,13,27,.92), rgba(4,9,20,.98));
+  box-shadow:
+    0 24px 80px rgba(0,0,0,.38),
+    inset 0 0 0 1px rgba(0,245,255,.04);
+}
+
+.pg-email-topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
+}
+.pg-email-title{
+  margin:0;
+  font-size:24px;
+  font-weight:1100;
+  color:#eef6ff;
+}
+.pg-email-subtitle{
+  margin-top:8px;
+  color:rgba(185,203,238,.82);
+  font-size:14px;
+}
+.pg-email-top-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.pg-email-layout{
+  display:grid;
+  grid-template-columns:280px minmax(0,1fr);
+  gap:18px;
+}
+
+.pg-email-sidebar{
+  padding:18px;
+  border-radius:22px;
+  border:1px solid rgba(0,245,255,.10);
+  background:linear-gradient(180deg, rgba(7,15,31,.72), rgba(4,10,22,.92));
+  box-shadow:inset 0 0 0 1px rgba(0,245,255,.03);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.pg-email-side-head{
+  font-size:13px;
+  font-weight:1000;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(0,245,255,.9);
+  margin-bottom:4px;
+}
+.pg-email-side-link{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:46px;
+  padding:0 14px;
+  border-radius:14px;
+  border:1px solid rgba(0,245,255,.10);
+  background:rgba(0,245,255,.04);
+  color:#edf5ff;
+  font-size:14px;
+  font-weight:900;
+  cursor:pointer;
+  transition:all .16s ease;
+}
+.pg-email-side-link:hover{
+  transform:translateY(-1px);
+  border-color:rgba(0,245,255,.22);
+  background:rgba(0,245,255,.08);
+}
+.pg-email-side-link.active{
+  border-color:rgba(0,255,156,.26);
+  background:rgba(0,255,156,.08);
+  color:#dffff1;
+}
+.pg-email-side-card{
+  margin-top:10px;
+  padding:14px;
+  border-radius:16px;
+  border:1px solid rgba(0,245,255,.08);
+  background:rgba(0,0,0,.14);
+}
+.pg-email-side-card-title{
+  font-size:12px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:rgba(171,192,231,.78);
+}
+.pg-email-side-card-text{
+  margin-top:10px;
+  color:#eef6ff;
+  font-size:14px;
+  line-height:1.45;
+}
+
+.pg-email-main{
+  min-width:0;
+}
+.pg-email-view{
+  width:100%;
+}
+.pg-email-card{
+  padding:18px;
+  border-radius:22px;
+  border:1px solid rgba(0,245,255,.10);
+  background:linear-gradient(180deg, rgba(7,15,31,.72), rgba(4,10,22,.92));
+  box-shadow:inset 0 0 0 1px rgba(0,245,255,.03);
+}
+.pg-email-card-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:18px;
+  flex-wrap:wrap;
+}
+.pg-email-card-title{
+  font-size:20px;
+  font-weight:1100;
+  color:#eef6ff;
+}
+.pg-email-card-sub{
+  margin-top:6px;
+  color:rgba(181,199,235,.74);
+  font-size:13px;
+}
+.pg-email-inline-status{
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(0,245,255,.14);
+  background:rgba(0,245,255,.05);
+  color:rgba(214,224,245,.92);
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.pg-email-form-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.pg-email-field.full{
+  grid-column:1 / -1;
+}
+.pg-email-field label{
+  display:block;
+  margin-bottom:7px;
+  color:rgba(171,192,231,.86);
+  font-size:13px;
+  font-weight:900;
+}
+.pg-email-input{
+  width:100%;
+  min-height:46px;
+  padding:0 14px;
+  border-radius:14px;
+  border:1px solid rgba(0,245,255,.12);
+  background:rgba(0,0,0,.18);
+  color:#eef6ff;
+  outline:none;
+}
+.pg-email-input:focus{
+  border-color:rgba(0,245,255,.26);
+  box-shadow:0 0 0 3px rgba(0,245,255,.08);
+}
+
+.pg-editor-wrap{
+  margin-top:16px;
+  border:1px solid rgba(0,245,255,.10);
+  border-radius:18px;
+  overflow:hidden;
+  background:rgba(0,0,0,.16);
+}
+.pg-editor-toolbar{
+  display:flex;
+  gap:8px;
+  padding:12px;
+  flex-wrap:wrap;
+  border-bottom:1px solid rgba(0,245,255,.08);
+  background:rgba(0,245,255,.04);
+}
+.pg-editor-btn{
+  min-height:36px;
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid rgba(0,245,255,.12);
+  background:rgba(0,0,0,.16);
+  color:#edf5ff;
+  cursor:pointer;
+  font-weight:900;
+}
+.pg-editor{
+  min-height:260px;
+  padding:16px;
+  color:#eef6ff;
+  outline:none;
+  line-height:1.65;
+}
+.pg-editor:empty:before{
+  content:"Write your email message here...";
+  color:rgba(171,192,231,.52);
+}
+.pg-editor-foot{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  padding:12px 14px;
+  border-top:1px solid rgba(0,245,255,.08);
+  color:rgba(171,192,231,.78);
+  font-size:12px;
+}
+.pg-security-mini{
+  color:#d7e8ff;
+}
+
+.pg-email-attachment-box{
+  margin-top:16px;
+  padding:16px;
+  border-radius:18px;
+  border:1px dashed rgba(0,245,255,.18);
+  background:rgba(0,245,255,.03);
+  transition:all .16s ease;
+}
+.pg-email-attachment-box.dragover{
+  border-color:rgba(0,255,156,.32);
+  background:rgba(0,255,156,.06);
+}
+.pg-attach-title{
+  font-size:16px;
+  font-weight:1000;
+  color:#eef6ff;
+}
+.pg-attach-sub{
+  margin-top:6px;
+  color:rgba(181,199,235,.74);
+  font-size:13px;
+}
+.pg-attach-actions{
+  margin-top:12px;
+}
+.pg-upload-progress-wrap{
+  margin-top:12px;
+}
+.pg-upload-progress-bar{
+  width:100%;
+  height:10px;
+  border-radius:999px;
+  overflow:hidden;
+  background:rgba(255,255,255,.08);
+}
+.pg-upload-progress-bar > div{
+  width:0%;
+  height:100%;
+  background:linear-gradient(90deg, rgba(0,245,255,.95), rgba(0,255,156,.95));
+  transition:width .25s ease;
+}
+.pg-upload-progress-text{
+  margin-top:8px;
+  font-size:12px;
+  color:rgba(185,203,238,.82);
+}
+.pg-attachment-list{
+  margin-top:14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.pg-attachment-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(0,245,255,.10);
+  background:rgba(0,0,0,.16);
+}
+.pg-attachment-main{
+  min-width:0;
+}
+.pg-attachment-name{
+  color:#eef6ff;
+  font-weight:900;
+  word-break:break-word;
+}
+.pg-attachment-meta{
+  margin-top:4px;
+  color:rgba(171,192,231,.76);
+  font-size:12px;
+}
+.pg-attachment-remove{
+  min-height:36px;
+  padding:0 12px;
+  border-radius:10px;
+  border:1px solid rgba(255,72,99,.18);
+  background:rgba(255,72,99,.08);
+  color:#ffd7de;
+  font-weight:900;
+  cursor:pointer;
+}
+
+.pg-security-warnings{
+  margin-top:16px;
+  padding:14px;
+  border-radius:16px;
+  border:1px solid rgba(255,190,110,.18);
+  background:rgba(255,190,110,.08);
+  color:#ffe2b6;
+}
+.pg-security-warnings ul{
+  margin:8px 0 0 18px;
+  padding:0;
+}
+
+.pg-email-actions{
+  margin-top:18px;
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.pg-email-btn{
+  min-height:44px;
+  padding:0 16px;
+  border-radius:12px;
+  border:1px solid rgba(0,245,255,.14);
+  background:rgba(0,245,255,.05);
+  color:#eef6ff;
+  font-size:14px;
+  font-weight:1000;
+  cursor:pointer;
+  transition:all .16s ease;
+}
+.pg-email-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(0,245,255,.26);
+  background:rgba(0,245,255,.08);
+}
+.pg-email-btn.primary{
+  border-color:rgba(0,255,156,.22);
+  background:rgba(0,255,156,.10);
+  color:#ddfff0;
+}
+.pg-email-btn.secondary{
+  border-color:rgba(255,190,110,.18);
+  background:rgba(255,190,110,.08);
+  color:#ffe2b6;
+}
+
+.pg-list-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.pg-list-empty{
+  padding:18px;
+  border-radius:16px;
+  border:1px solid rgba(0,245,255,.08);
+  background:rgba(0,0,0,.16);
+  color:rgba(181,199,235,.76);
+}
+.pg-mail-item{
+  padding:14px 16px;
+  border-radius:16px;
+  border:1px solid rgba(0,245,255,.08);
+  background:rgba(0,0,0,.16);
+  cursor:pointer;
+  transition:all .16s ease;
+}
+.pg-mail-item:hover{
+  transform:translateY(-1px);
+  border-color:rgba(0,245,255,.22);
+  background:rgba(0,245,255,.05);
+}
+.pg-mail-top{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+.pg-mail-subject{
+  color:#eef6ff;
+  font-size:15px;
+  font-weight:1000;
+}
+.pg-mail-time{
+  color:rgba(171,192,231,.76);
+  font-size:12px;
+  white-space:nowrap;
+}
+.pg-mail-meta{
+  margin-top:8px;
+  color:rgba(171,192,231,.78);
+  font-size:13px;
+}
+.pg-mail-preview{
+  margin-top:8px;
+  color:rgba(214,224,245,.88);
+  font-size:13px;
+  line-height:1.5;
+}
+
+.pg-email-toast{
+  margin-bottom:14px;
+  padding:14px 16px;
+  border-radius:14px;
+  font-size:14px;
+  font-weight:1000;
+}
+.pg-email-toast.ok{
+  background:rgba(0,255,156,.10);
+  border:1px solid rgba(0,255,156,.22);
+  color:#dffff0;
+}
+.pg-email-toast.bad{
+  background:rgba(255,72,99,.10);
+  border:1px solid rgba(255,72,99,.22);
+  color:#ffd9df;
+}
+.pg-email-toast.warn{
+  background:rgba(255,190,110,.10);
+  border:1px solid rgba(255,190,110,.22);
+  color:#ffe2b6;
+}
+
+@media (max-width: 1080px){
+  .pg-email-layout{
+    grid-template-columns:1fr;
+  }
+  .pg-email-form-grid{
+    grid-template-columns:1fr;
+  }
+}
+</style>
+
+<script>
+let pgCurrentTab = "compose";
+let pgDraftId = null;
+let pgAttachmentTokens = [];
+let pgAutoSaveTimer = null;
+let pgCurrentProfile = null;
+
+function pgToast(message, kind="ok"){
+  const el = document.getElementById("pgEmailToast");
+  el.className = `pg-email-toast ${kind}`;
+  el.textContent = message;
+  el.style.display = "block";
+  setTimeout(() => {
+    el.style.display = "none";
+  }, 3200);
+}
+
+function pgSetStatusLine(text){
+  const el = document.getElementById("pgEmailStatusLine");
+  if(el) el.textContent = text;
+}
+
+function pgExecCmd(cmd, value=null){
+  document.execCommand(cmd, false, value);
+  pgUpdateComposerMeta();
+}
+
+function pgInsertLink(){
+  const url = prompt("Enter link URL");
+  if(!url) return;
+  document.execCommand("createLink", false, url);
+  pgUpdateComposerMeta();
+}
+
+function pgMessageHtml(){
+  return document.getElementById("pgMessage").innerHTML || "";
+}
+
+function pgMessageText(){
+  return document.getElementById("pgMessage").innerText || "";
+}
+
+function pgUpdateComposerMeta(){
+  const text = pgMessageText().trim();
+  document.getElementById("pgCharCounter").textContent = `${text.length} characters`;
+
+  const warnings = pgLocalSecurityWarnings();
+  const mini = document.getElementById("pgSecurityWarningMini");
+  mini.textContent = warnings.length ? `${warnings.length} warning(s) detected` : "No security warning";
+
+  const box = document.getElementById("pgSecurityWarnings");
+  if(warnings.length){
+    box.style.display = "block";
+    box.innerHTML = `<strong>Security Warnings</strong><ul>${warnings.map(x => `<li>${pgEsc(x)}</li>`).join("")}</ul>`;
+  } else {
+    box.style.display = "none";
+    box.innerHTML = "";
+  }
+}
+
+function pgEsc(v){
+  return String(v || "").replace(/[&<>"']/g, function(m){
+    return ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    })[m];
+  });
+}
+
+function pgFormatFileSize(bytes){
+  const n = Number(bytes || 0);
+  if(n < 1024) return `${n} B`;
+  if(n < 1024*1024) return `${(n/1024).toFixed(1)} KB`;
+  return `${(n/(1024*1024)).toFixed(2)} MB`;
+}
+
+function pgSplitEmails(value){
+  return String(value || "")
+    .split(/[,\n;]+/)
+    .map(x => x.trim())
+    .filter(Boolean);
+}
+
+function pgLocalSecurityWarnings(){
+  const warnings = [];
+  const html = pgMessageHtml();
+  const urls = html.match(/https?:\/\/[^\s<>"']+/gi) || [];
+  const recipients = [
+    ...pgSplitEmails(document.getElementById("pgTo").value),
+    ...pgSplitEmails(document.getElementById("pgCc").value),
+    ...pgSplitEmails(document.getElementById("pgBcc").value)
+  ];
+
+  const shorteners = ["bit.ly","tinyurl.com","t.co","ow.ly","rb.gy","cutt.ly","tiny.one"];
+  urls.forEach(u => {
+    try{
+      const host = new URL(u).hostname.toLowerCase();
+      if(shorteners.includes(host)){
+        warnings.push(`Shortened link detected: ${host}`);
+      }
+      if(/^\d{1,3}(\.\d{1,3}){3}$/.test(host)){
+        warnings.push(`Raw IP address used in link: ${host}`);
+      }
+      const lower = u.toLowerCase();
+      if(["login","verify","signin","password","account","reset"].some(k => lower.includes(k))){
+        warnings.push("Message contains a login or account verification link.");
+      }
+    }catch(e){}
+  });
+
+  recipients.forEach(r => {
+    const parts = r.split("@");
+    if(parts.length !== 2 || !parts[1] || !parts[1].includes(".")){
+      warnings.push(`Invalid recipient domain: ${r}`);
+    }
+  });
+
+  return [...new Set(warnings)].slice(0, 8);
+}
+
+async function pgFetchProfile(){
+  const r = await fetch("/api/email-center/profile", {cache:"no-store"});
+  const j = await r.json();
+  if(!r.ok || !j.ok){
+    throw new Error(j.error || "Failed to load email profile.");
+  }
+  pgCurrentProfile = j;
+  document.getElementById("pgFrom").value = j.email || "";
+}
+
+function pgSetSideTab(tab){
+  ["compose","inbox","sent","drafts"].forEach(name => {
+    const el = document.getElementById("pgTab" + name.charAt(0).toUpperCase() + name.slice(1));
+    if(el) el.classList.toggle("active", tab === name);
+  });
+}
+
+function pgShowView(tab){
+  document.getElementById("pgEmailComposeView").style.display = tab === "compose" ? "block" : "none";
+  document.getElementById("pgEmailInboxView").style.display = tab === "inbox" ? "block" : "none";
+  document.getElementById("pgEmailSentView").style.display = tab === "sent" ? "block" : "none";
+  document.getElementById("pgEmailDraftsView").style.display = tab === "drafts" ? "block" : "none";
+}
+
+async function pgEmailOpenTab(tab){
+  pgCurrentTab = tab;
+  pgSetSideTab(tab);
+  pgShowView(tab);
+
+  if(tab === "inbox"){
+    pgSetStatusLine("Loading inbox...");
+    await pgLoadFolder("inbox");
+  } else if(tab === "sent"){
+    pgSetStatusLine("Loading sent emails...");
+    await pgLoadFolder("sent");
+  } else if(tab === "drafts"){
+    pgSetStatusLine("Loading drafts...");
+    await pgLoadFolder("drafts");
+  } else {
+    pgSetStatusLine("Ready to compose.");
+  }
+}
+
+async function pgLoadFolder(folder){
+  const targetMap = {
+    inbox: "pgInboxList",
+    sent: "pgSentList",
+    drafts: "pgDraftsList"
+  };
+  const box = document.getElementById(targetMap[folder]);
+  if(!box) return;
+
+  box.innerHTML = `<div class="pg-list-empty">Loading ${pgEsc(folder)}...</div>`;
+
+  try{
+    const r = await fetch(`/api/email-center/list?folder=${encodeURIComponent(folder)}`, {cache:"no-store"});
+    const j = await r.json();
+
+    if(!r.ok || !j.ok){
+      throw new Error(j.error || `Failed to load ${folder}.`);
+    }
+
+    const list = Array.isArray(j.messages) ? j.messages : [];
+    if(!list.length){
+      box.innerHTML = `<div class="pg-list-empty">No ${pgEsc(folder)} emails yet.</div>`;
+      return;
+    }
+
+    if(folder === "inbox" && j.source === "gmail"){
+      box.innerHTML = list.map(item => `
+        <div class="pg-mail-item">
+          <div class="pg-mail-top">
+            <div class="pg-mail-subject">${pgEsc(item.subject || "(no subject)")}</div>
+            <div class="pg-mail-time">${pgEsc(item.internalDate ? new Date(Number(item.internalDate)).toLocaleString() : "")}</div>
+          </div>
+          <div class="pg-mail-meta">From: ${pgEsc(item.from || "")}</div>
+        </div>
+      `).join("");
+      return;
+    }
+
+    box.innerHTML = list.map(item => {
+      const toLine = Array.isArray(item.to) ? item.to.join(", ") : "";
+      const preview = (item.body_text || "").slice(0, 180);
+      return `
+        <div class="pg-mail-item" onclick="pgLoadDraftToComposer(${Number(item.id || 0)})">
+          <div class="pg-mail-top">
+            <div class="pg-mail-subject">${pgEsc(item.subject || "(no subject)")}</div>
+            <div class="pg-mail-time">${pgEsc(item.updated_at || item.sent_at || "")}</div>
+          </div>
+          <div class="pg-mail-meta">To: ${pgEsc(toLine)}</div>
+          <div class="pg-mail-preview">${pgEsc(preview || "No content")}</div>
+        </div>
+      `;
+    }).join("");
+
+    pgSetStatusLine(`${folder.charAt(0).toUpperCase() + folder.slice(1)} loaded`);
+  } catch(err){
+    box.innerHTML = `<div class="pg-list-empty">${pgEsc(err.message || "Load failed.")}</div>`;
+    pgSetStatusLine("Load failed");
+  }
+}
+
+async function pgLoadDraftToComposer(id){
+  if(!id) return;
+  try{
+    const r = await fetch(`/api/email-center/item/${id}`, {cache:"no-store"});
+    const j = await r.json();
+    if(!r.ok || !j.ok){
+      throw new Error(j.error || "Failed to load email.");
+    }
+
+    const item = j.item || {};
+    pgDraftId = item.id || null;
+    document.getElementById("pgFrom").value = item.sender || (pgCurrentProfile?.email || "");
+    document.getElementById("pgTo").value = Array.isArray(item.to) ? item.to.join(", ") : "";
+    document.getElementById("pgCc").value = Array.isArray(item.cc) ? item.cc.join(", ") : "";
+    document.getElementById("pgBcc").value = Array.isArray(item.bcc) ? item.bcc.join(", ") : "";
+    document.getElementById("pgSubject").value = item.subject || "";
+    document.getElementById("pgMessage").innerHTML = item.body || "";
+    pgAttachmentTokens = Array.isArray(item.attachments) ? item.attachments.map(x => x.token).filter(Boolean) : [];
+    pgRenderAttachmentList(item.attachments || []);
+    document.getElementById("pgDraftState").textContent = `Loaded ${item.folder === "drafts" ? "draft" : "email"} #${item.id}`;
+    pgUpdateComposerMeta();
+    pgEmailOpenTab("compose");
+    pgToast("Loaded into composer", "ok");
+  } catch(err){
+    pgToast(err.message || "Failed to load email", "bad");
+  }
+}
+
+function pgDropOver(e){
+  e.preventDefault();
+  document.getElementById("pgDropZone").classList.add("dragover");
+}
+function pgDropLeave(e){
+  e.preventDefault();
+  document.getElementById("pgDropZone").classList.remove("dragover");
+}
+function pgDropFiles(e){
+  e.preventDefault();
+  document.getElementById("pgDropZone").classList.remove("dragover");
+  const files = Array.from(e.dataTransfer.files || []);
+  pgUploadFiles(files);
+}
+function pgHandleAttachInput(e){
+  const files = Array.from((e.target && e.target.files) || []);
+  pgUploadFiles(files);
+  e.target.value = "";
+}
+
+async function pgUploadFiles(files){
+  if(!files || !files.length) return;
+
+  const progressWrap = document.getElementById("pgUploadProgressWrap");
+  const progressBar = document.getElementById("pgUploadProgressBar");
+  const progressText = document.getElementById("pgUploadProgressText");
+
+  progressWrap.style.display = "block";
+
+  const collected = [];
+  for(let i = 0; i < files.length; i++){
+    const file = files[i];
+    const fd = new FormData();
+    fd.append("file", file);
+
+    progressBar.style.width = `${Math.round((i / files.length) * 100)}%`;
+    progressText.textContent = `Uploading ${file.name}...`;
+
+    try{
+      const r = await fetch("/api/email-center/upload-attachment", {
+        method: "POST",
+        body: fd
+      });
+      const j = await r.json();
+      if(!r.ok || !j.ok){
+        throw new Error(j.error || `Failed to upload ${file.name}`);
+      }
+      pgAttachmentTokens.push(j.attachment.token);
+      collected.push(j.attachment);
+    } catch(err){
+      pgToast(err.message || "Attachment upload failed", "bad");
+    }
+  }
+
+  progressBar.style.width = "100%";
+  progressText.textContent = "Upload complete";
+  setTimeout(() => {
+    progressWrap.style.display = "none";
+    progressBar.style.width = "0%";
+  }, 800);
+
+  const currentItems = pgCollectRenderedAttachments();
+  pgRenderAttachmentList([...currentItems, ...collected]);
+}
+
+function pgCollectRenderedAttachments(){
+  const nodes = document.querySelectorAll(".pg-attachment-item");
+  const items = [];
+  nodes.forEach(node => {
+    items.push({
+      token: node.dataset.token || "",
+      filename: node.dataset.filename || "",
+      size: Number(node.dataset.size || 0),
+      mime: node.dataset.mime || ""
+    });
+  });
+  return items.filter(x => x.token);
+}
+
+function pgRenderAttachmentList(items){
+  const list = document.getElementById("pgAttachmentList");
+  const safeItems = Array.isArray(items) ? items : [];
+
+  if(!safeItems.length){
+    list.innerHTML = "";
+    return;
+  }
+
+  list.innerHTML = safeItems.map(item => `
+    <div class="pg-attachment-item"
+         data-token="${pgEsc(item.token || "")}"
+         data-filename="${pgEsc(item.filename || "")}"
+         data-size="${Number(item.size || 0)}"
+         data-mime="${pgEsc(item.mime || "")}">
+      <div class="pg-attachment-main">
+        <div class="pg-attachment-name">${pgEsc(item.filename || "Attachment")}</div>
+        <div class="pg-attachment-meta">${pgFormatFileSize(item.size || 0)} • ${pgEsc(item.mime || "application/octet-stream")}</div>
+      </div>
+      <button class="pg-attachment-remove" onclick="pgRemoveAttachment('${pgEsc(item.token || "")}')">Remove</button>
+    </div>
+  `).join("");
+}
+
+async function pgRemoveAttachment(token){
+  if(!token) return;
+  try{
+    const r = await fetch("/api/email-center/remove-attachment", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({token})
+    });
+    const j = await r.json();
+    if(!r.ok || !j.ok){
+      throw new Error(j.error || "Failed to remove attachment");
+    }
+    pgAttachmentTokens = pgAttachmentTokens.filter(x => x !== token);
+    const current = pgCollectRenderedAttachments().filter(x => x.token !== token);
+    pgRenderAttachmentList(current);
+    pgToast("Attachment removed", "ok");
+  } catch(err){
+    pgToast(err.message || "Failed to remove attachment", "bad");
+  }
+}
+
+function pgComposerPayload(){
+  return {
+    draft_id: pgDraftId,
+    from: document.getElementById("pgFrom").value.trim(),
+    to: document.getElementById("pgTo").value.trim(),
+    cc: document.getElementById("pgCc").value.trim(),
+    bcc: document.getElementById("pgBcc").value.trim(),
+    subject: document.getElementById("pgSubject").value.trim(),
+    message: pgMessageHtml(),
+    attachment_tokens: pgAttachmentTokens
+  };
+}
+
+async function pgSaveDraftManual(){
+  await pgSaveDraft(true);
+}
+
+async function pgSaveDraft(showToast=false){
+  const payload = pgComposerPayload();
+
+  if(!payload.from){
+    return;
+  }
+
+  try{
+    document.getElementById("pgDraftState").textContent = "Saving draft...";
+    const r = await fetch("/api/email-center/draft/save", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+
+    if(!r.ok || !j.ok){
+      throw new Error(j.error || "Draft save failed");
+    }
+
+    pgDraftId = j.draft_id || pgDraftId;
+    document.getElementById("pgDraftState").textContent = `Draft saved • ${j.saved_at || ""}`;
+    if(showToast){
+      pgToast("Draft saved", "ok");
+    }
+  } catch(err){
+    document.getElementById("pgDraftState").textContent = "Draft not saved";
+    if(showToast){
+      pgToast(err.message || "Draft not saved", "bad");
+    }
+  }
+}
+
+async function pgSendEmail(){
+  const btn = document.getElementById("pgSendBtn");
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Sending...";
+
+  const payload = pgComposerPayload();
+
+  try{
+    const r = await fetch("/api/email-center/send", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+    const j = await r.json();
+
+    if(!r.ok || !j.ok){
+      throw new Error(j.error || "Email not sent");
+    }
+
+    document.getElementById("pgDraftState").textContent = "Email sent";
+    pgToast("Email sent", "ok");
+    pgSetStatusLine("Email sent successfully");
+    pgResetComposer();
+    await pgLoadFolder("sent");
+    await pgLoadFolder("drafts");
+    await pgEmailOpenTab("sent");
+  } catch(err){
+    document.getElementById("pgDraftState").textContent = "Email not sent";
+    pgToast(err.message || "Email not sent", "bad");
+    pgSetStatusLine("Email not sent");
+  } finally{
+    btn.disabled = false;
+    btn.textContent = original;
+  }
+}
+
+function pgResetComposer(){
+  pgDraftId = null;
+  pgAttachmentTokens = [];
+  document.getElementById("pgTo").value = "";
+  document.getElementById("pgCc").value = "";
+  document.getElementById("pgBcc").value = "";
+  document.getElementById("pgSubject").value = "";
+  document.getElementById("pgMessage").innerHTML = "";
+  document.getElementById("pgAttachmentList").innerHTML = "";
+  document.getElementById("pgDraftState").textContent = "Draft not saved yet";
+  document.getElementById("pgSecurityWarnings").style.display = "none";
+  document.getElementById("pgSecurityWarnings").innerHTML = "";
+  pgUpdateComposerMeta();
+}
+
+function pgStartAutoSave(){
+  if(pgAutoSaveTimer){
+    clearInterval(pgAutoSaveTimer);
+  }
+  pgAutoSaveTimer = setInterval(() => {
+    if(pgCurrentTab === "compose"){
+      const hasContent =
+        document.getElementById("pgTo").value.trim() ||
+        document.getElementById("pgCc").value.trim() ||
+        document.getElementById("pgBcc").value.trim() ||
+        document.getElementById("pgSubject").value.trim() ||
+        pgMessageText().trim() ||
+        pgAttachmentTokens.length;
+
+      if(hasContent){
+        pgSaveDraft(false);
+      }
+    }
+  }, 30000);
+}
+
+async function pgInitEmailCenter(){
+  try{
+    await pgFetchProfile();
+
+    document.getElementById("pgMessage").addEventListener("input", pgUpdateComposerMeta);
+    document.getElementById("pgTo").addEventListener("input", pgUpdateComposerMeta);
+    document.getElementById("pgCc").addEventListener("input", pgUpdateComposerMeta);
+    document.getElementById("pgBcc").addEventListener("input", pgUpdateComposerMeta);
+    document.getElementById("pgSubject").addEventListener("input", pgUpdateComposerMeta);
+
+    pgUpdateComposerMeta();
+    pgStartAutoSave();
+
+    const params = new URLSearchParams(window.location.search);
+    const view = (params.get("view") || "compose").toLowerCase();
+    if(["compose","inbox","sent","drafts"].includes(view)){
+      await pgEmailOpenTab(view);
+    } else {
+      await pgEmailOpenTab("compose");
+    }
+  } catch(err){
+    pgToast(err.message || "Failed to initialize Email Center", "bad");
+    pgSetStatusLine("Initialization failed");
+  }
+}
+
+pgInitEmailCenter();
+</script>

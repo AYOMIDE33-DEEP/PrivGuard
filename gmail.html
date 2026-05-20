@@ -1,0 +1,2078 @@
+<div class="gmail-root">
+  <div class="card" style="max-width:1300px;">
+    <div class="topbar">
+      <div>
+        <h2 class="h2">Smart Email Scanning & Threat Detection</h2>
+        <div id="connLine" class="muted">Checking connection...</div>
+      </div>
+      <div class="top-actions">
+        <button id="connectBtn" class="btn" type="button" onclick="toggleConnect()">Checking...</button>
+        <button class="btn" type="button" id="refreshBtn" onclick="refreshAll()">Refresh</button>
+        <button class="btn" type="button" id="riskSettingsBtn" onclick="openRiskSettings()">Risk Settings</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <input id="max" class="input" value="100" placeholder="Max emails (1 - 100)" />
+      <div id="loadingLabel" class="tiny-muted"></div>
+    </div>
+
+    <div id="toast" class="toast" style="display:none;"></div>
+    <div id="fsBackdrop" class="fs-backdrop" style="display:none;" onclick="exitFullscreen()"></div>
+
+    <div id="modalWrap" class="modal-wrap" style="display:none;" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-head">
+          <div id="modalTitle" class="modal-title">Action</div>
+          <button class="icon-btn" type="button" id="modalCloseX" onclick="closeModal()">✕</button>
+        </div>
+        <div id="modalBody"></div>
+        <div class="modal-foot">
+          <button class="tab-btn" type="button" id="modalCancelBtn" onclick="closeModal()">Cancel</button>
+          <button class="tab-btn danger" type="button" id="modalOk" onclick="modalOk()">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cyber-grid" id="grid">
+
+      <div class="cyber-panel" id="panelInbox" ondblclick="toggleFullscreen('panelInbox')">
+        <div class="panel-header">
+          <div style="flex:1;">
+            <div class="panel-title">EMAIL INBOX</div>
+            <div class="header-accent"></div>
+            <div class="panel-tabs">
+              <button id="tabInbox" class="tab-btn active" type="button" onclick="setBox('inbox')">Inbox</button>
+              <button id="tabFlagged" class="tab-btn danger" type="button" onclick="setBox('flagged')">Flagged</button>
+              <button id="tabArchived" class="tab-btn" type="button" onclick="setBox('archived')">Archived</button>
+              <button id="tabDeleted" class="tab-btn danger" type="button" onclick="setBox('deleted')">Deleted</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="inboxList" class="inboxListScroll"></div>
+        </div>
+      </div>
+
+      <div class="cyber-panel" id="panelScan" ondblclick="toggleFullscreen('panelScan')">
+        <div class="panel-header">
+          <div style="flex:1;">
+            <div class="panel-title">EMAIL SCANNING</div>
+            <div class="header-accent"></div>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <div class="scan-box" id="scanBox">
+            <div class="scan-title" id="scanTitle">Select an email to scan</div>
+            <div class="progress"><div id="scanBar"></div></div>
+            <div class="scan-status" id="scanStatus">Waiting...</div>
+
+            <div class="kv">
+              <div class="k">Attachments scanned</div><div id="kvAttach">-</div>
+              <div class="k">Links analyzed</div><div id="kvLinks">-</div>
+              <div class="k">Risk category</div><div id="kvPhish">-</div>
+              <div class="k">Overall Risk Score</div><div id="kvScore">-</div>
+            </div>
+
+            <div class="scan-actions">
+              <button class="tab-btn" type="button" id="rescanBtn" onclick="rescan()" disabled>Rescan</button>
+            </div>
+          </div>
+
+          <div class="mail-view">
+            <div class="mail-head">
+              <div class="mail-head-left">
+                <div class="mail-subj" id="mvSubject">No email selected</div>
+                <div class="mail-meta" id="mvMeta"></div>
+              </div>
+
+              <div class="mail-actions">
+                <button class="tab-btn" type="button" id="btnGmail" onclick="viewInGmail()" disabled>View in Gmail</button>
+                <button class="tab-btn" type="button" id="btnHtml" onclick="viewHtml()" disabled>View HTML</button>
+              </div>
+            </div>
+
+            <div class="attachments" id="mvAttachments"></div>
+
+            <div class="mail-content" id="mvBody">
+              Select an email to view its full content safely inside PrivGuard.
+            </div>
+
+            <div class="mail-inline-actions">
+              <button class="tab-btn" type="button" id="btnReply" onclick="showReplyBox()" disabled>Reply</button>
+              <button class="tab-btn" type="button" id="btnForward" onclick="showForwardBox()" disabled>Forward</button>
+              <button class="tab-btn" type="button" id="btnReact" onclick="toggleReactBox()" disabled>React</button>
+              <button class="tab-btn danger" type="button" id="btnDeleteInline" onclick="toggleDeleteBox()" disabled>Delete</button>
+            </div>
+
+            <div id="replyBox" class="inline-action-box" style="display:none;">
+              <div class="field">
+                <label for="replyText">Reply message</label>
+                <textarea id="replyText" class="modal-text" placeholder="Write your reply..."></textarea>
+              </div>
+              <div class="row">
+                <button class="tab-btn" type="button" onclick="sendReply()">Send Reply</button>
+                <button class="tab-btn" type="button" onclick="hideInlineBoxes()">Cancel</button>
+              </div>
+            </div>
+
+            <div id="forwardBox" class="inline-action-box" style="display:none;">
+              <div class="field">
+                <label for="fwdTo">Forward to</label>
+                <input id="fwdTo" class="input" placeholder="example@gmail.com">
+              </div>
+              <div class="field">
+                <label for="fwdText">Message</label>
+                <textarea id="fwdText" class="modal-text" placeholder="Add a note (optional)..."></textarea>
+              </div>
+              <div class="row">
+                <button class="tab-btn" type="button" onclick="sendForward()">Send Forward</button>
+                <button class="tab-btn" type="button" onclick="hideInlineBoxes()">Cancel</button>
+              </div>
+            </div>
+
+            <div id="reactBox" class="inline-action-box" style="display:none;">
+              <div class="reaction-grid">
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('👍')">👍</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('❤️')">❤️</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('😂')">😂</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('😮')">😮</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('😢')">😢</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('😡')">😡</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('✅')">✅</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('⚠️')">⚠️</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('🚫')">🚫</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('🔥')">🔥</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('⭐')">⭐</button>
+                <button class="tab-btn reaction-btn" type="button" onclick="reactSet('👀')">👀</button>
+              </div>
+            </div>
+
+            <div id="deleteBox" class="inline-action-box danger-box" style="display:none;">
+              <div class="tiny-muted">Are you sure you want to delete this email?</div>
+              <div class="row" style="margin-top:10px;">
+                <button class="tab-btn danger" type="button" onclick="actionDelete()">Yes, Delete</button>
+                <button class="tab-btn" type="button" onclick="hideInlineBoxes()">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cyber-panel" id="panelReport" ondblclick="toggleFullscreen('panelReport')">
+        <div class="panel-header">
+          <div style="flex:1;">
+            <div class="panel-title report-title">THREAT REPORT</div>
+            <div class="header-accent report-accent"></div>
+            <div class="panel-tabs">
+              <button class="tab-btn danger" type="button" id="btnFlag" onclick="actionStarToggle()" disabled>Flag</button>
+              <button class="tab-btn" type="button" id="btnArchive" onclick="actionArchiveToggle()" disabled>Archive</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-body threat-panel-body">
+          <div id="threatHeadline" class="threat-head">No email selected</div>
+
+          <div class="risk-top-card">
+            <div class="risk-chart-wrap">
+              <svg class="pie" viewBox="0 0 120 120" aria-label="Risk chart">
+                <circle class="pie-bg" cx="60" cy="60" r="44"></circle>
+                <circle id="segLow" class="pie-seg low" cx="60" cy="60" r="44"></circle>
+                <circle id="segMed" class="pie-seg med" cx="60" cy="60" r="44"></circle>
+                <circle id="segHigh" class="pie-seg high" cx="60" cy="60" r="44"></circle>
+                <circle id="segCritical" class="pie-seg critical" cx="60" cy="60" r="44"></circle>
+                <circle id="scoreRing" class="pie-score low" cx="60" cy="60" r="44"></circle>
+                <text id="pieLabel" x="60" y="56" text-anchor="middle" class="pie-label">SAFE</text>
+                <text id="pieScore" x="60" y="76" text-anchor="middle" class="pie-score-text">0/100</text>
+              </svg>
+            </div>
+
+            <div class="overview-left">
+              <div class="risk-row">
+                <div class="risk-pill" id="riskPill" style="display:none;">SAFE</div>
+              </div>
+
+              <div class="risk-note-text" id="riskHint">
+                Select an email to view security summary.
+              </div>
+
+              <div class="overview-metrics">
+                <div class="metric-box">
+                  <div class="metric-label">Overall Risk Score</div>
+                  <div class="metric-value" id="overviewScore">0/100</div>
+                </div>
+                <div class="metric-box">
+                  <div class="metric-label">Threat Level</div>
+                  <div class="metric-value" id="overviewLevel">SAFE</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="report-section">
+            <div class="section-title">Essential Security Indicators</div>
+            <div id="indicatorGrid" class="indicator-grid">
+              <div class="tiny-muted">No indicators available.</div>
+            </div>
+          </div>
+
+          <div class="report-section">
+            <div class="detail-head-row">
+              <div class="section-title" style="margin:0;">Detailed Analysis</div>
+              <button class="tab-btn" type="button" id="btnExplain" onclick="toggleDetailedAnalysis()" disabled>
+                View Detailed Analysis
+              </button>
+            </div>
+
+            <div id="detailPanel" class="detail-panel" style="display:none;">
+              <div id="detailExplain" class="detail-explain"></div>
+            </div>
+          </div>
+
+          <div class="report-section reco-wrap">
+            <div class="section-title" style="margin-top:0;">Recommendation</div>
+            <div id="recoList"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+button{ transition: transform .06s ease, filter .12s ease, opacity .12s ease; }
+button:active{ transform: translateY(1px) scale(.99); filter: brightness(1.08); }
+button.clicked{ outline: 2px solid rgba(0,245,255,.35); }
+
+.mail-content{ max-height: 320px; overflow:auto; line-height:1.55; word-break: break-word; }
+.inboxListScroll{ max-height: 560px; overflow:auto; }
+.link{ color:#00f5ff; text-decoration:none; }
+.link:hover{ text-decoration:underline; }
+
+.cyber-grid.has-fullscreen .cyber-panel{ display:none; }
+.cyber-grid.has-fullscreen .cyber-panel.fullscreen{ display:block; position:relative; z-index:5; }
+.fs-backdrop{ position:fixed; inset:0; background: rgba(0,0,0,.65); z-index:4; }
+
+.scan-box.risk-low{ border:1px solid rgba(0,255,170,.35); box-shadow: 0 0 0 1px rgba(0,255,170,.12) inset; }
+.scan-box.risk-med{ border:1px solid rgba(255,200,80,.35); box-shadow: 0 0 0 1px rgba(255,200,80,.12) inset; }
+.scan-box.risk-high{ border:1px solid rgba(255,70,70,.42); box-shadow: 0 0 0 1px rgba(255,70,70,.12) inset; }
+.scan-box.risk-critical{ border:1px solid rgba(120,0,0,.75); box-shadow: 0 0 0 1px rgba(120,0,0,.24) inset; }
+
+.scan-status.done{ color: rgba(0,255,170,.95); font-weight:800; }
+.scan-status.scanning{ color: rgba(0,245,255,.95); font-weight:800; }
+
+.pie{
+  width: 220px;
+  height: 220px;
+  display:block;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+.pie-bg{
+  fill:none;
+  stroke: rgba(255,255,255,.10);
+  stroke-width: 14;
+}
+.pie-seg{
+  fill:none;
+  stroke-width: 14;
+  stroke-linecap: butt;
+  transform: rotate(-90deg);
+  transform-origin: 60px 60px;
+  opacity:.18;
+}
+.pie-seg.low{
+  stroke: rgba(0,255,170,.92);
+  stroke-dasharray: 69 207;
+  stroke-dashoffset: 0;
+}
+.pie-seg.med{
+  stroke: rgba(255,200,80,.92);
+  stroke-dasharray: 69 207;
+  stroke-dashoffset: -69;
+}
+.pie-seg.high{
+  stroke: rgba(255,70,70,.92);
+  stroke-dasharray: 69 207;
+  stroke-dashoffset: -138;
+}
+.pie-seg.critical{
+  stroke: rgba(120,0,0,.95);
+  stroke-dasharray: 69 207;
+  stroke-dashoffset: -207;
+}
+
+.pie-score{
+  fill:none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 60px 60px;
+}
+.pie-score.low{ stroke: rgba(0,255,170,.95); }
+.pie-score.med{ stroke: rgba(255,200,80,.95); }
+.pie-score.high{ stroke: rgba(255,70,70,.95); }
+.pie-score.critical{ stroke: rgba(120,0,0,.98); }
+
+.pie-label{
+  fill: #d7e0ff;
+  font-weight:900;
+  font-size: 12px;
+  letter-spacing:.04em;
+  text-transform: uppercase;
+}
+.pie-score-text{
+  fill: rgba(142,162,214,.95);
+  font-weight:900;
+  font-size: 11px;
+}
+
+.rx-pill{
+  display:inline-flex;
+  margin-left:8px;
+  padding:2px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.25);
+  font-size:14px;
+}
+
+.threat-panel-body{
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+
+.report-section{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-top:4px;
+}
+
+.risk-top-card{
+  display:grid;
+  grid-template-columns: 280px minmax(0,1fr);
+  gap:24px;
+  align-items:center;
+  min-height:290px;
+  padding:22px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  background: rgba(255,255,255,.03);
+  overflow:hidden;
+  position:relative;
+}
+
+.risk-chart-wrap{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:240px;
+  width:100%;
+}
+
+.overview-left{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:14px;
+  min-height:240px;
+}
+
+.risk-row{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.risk-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 14px;
+  min-width:110px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+
+.risk-pill.low{
+  color:#84ffd1;
+  background: rgba(0,255,170,.12);
+  border:1px solid rgba(0,255,170,.35);
+}
+.risk-pill.med{
+  color:#ffd888;
+  background: rgba(255,200,80,.12);
+  border:1px solid rgba(255,200,80,.34);
+}
+.risk-pill.high{
+  color:#ffb1b1;
+  background: rgba(255,70,70,.12);
+  border:1px solid rgba(255,70,70,.34);
+}
+.risk-pill.critical{
+  color:#ffd7d7;
+  background: rgba(120,0,0,.28);
+  border:1px solid rgba(120,0,0,.8);
+}
+
+.risk-note-text{
+  line-height:1.6;
+  color: rgba(215,226,252,.90);
+  font-size:15px;
+}
+
+.overview-metrics{
+  display:grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.metric-box{
+  padding:12px;
+  border-radius:14px;
+  background: rgba(7,16,34,.72);
+  border:1px solid rgba(255,255,255,.07);
+}
+.metric-label{
+  font-size:12px;
+  color: rgba(180,196,236,.72);
+  text-transform: uppercase;
+  letter-spacing:.08em;
+}
+.metric-value{
+  margin-top:6px;
+  font-size:24px;
+  font-weight:900;
+  color:#f5f8ff;
+  line-height:1.15;
+}
+
+.section-title{
+  margin-top:0;
+  margin-bottom:0;
+  font-size:12px;
+  letter-spacing:.12em;
+  text-transform: uppercase;
+  color: rgba(196,208,242,.80);
+}
+
+.indicator-grid{
+  display:grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap:14px;
+  margin-top:2px;
+}
+.indicator-card{
+  padding:14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.025);
+  min-width:0;
+}
+.indicator-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:8px;
+}
+.indicator-name{
+  font-weight:900;
+  font-size:16px;
+  color:#edf3ff;
+  line-height:1.25;
+}
+.indicator-explain{
+  font-size:14px;
+  line-height:1.5;
+  color: rgba(215,226,252,.86);
+}
+.status-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform: uppercase;
+  white-space:nowrap;
+}
+.status-badge.pass{
+  color:#84ffd1;
+  background: rgba(0,255,170,.12);
+  border:1px solid rgba(0,255,170,.35);
+}
+.status-badge.warning{
+  color:#ffd888;
+  background: rgba(255,200,80,.12);
+  border:1px solid rgba(255,200,80,.34);
+}
+.status-badge.fail{
+  color:#ffb1b1;
+  background: rgba(255,70,70,.12);
+  border:1px solid rgba(255,70,70,.34);
+}
+
+.detail-head-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.reco-wrap{
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.025);
+}
+.reco-item{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+  padding:10px 0;
+}
+.reco-item + .reco-item{
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.tick{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background: rgba(0,255,170,.85);
+  margin-top:6px;
+  flex-shrink:0;
+}
+
+.detail-panel{
+  margin-top:0;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+}
+.detail-explain{
+  padding:14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.06);
+  background: rgba(7,16,34,.72);
+  line-height:1.6;
+  color: rgba(228,236,255,.92);
+  white-space:pre-line;
+  font-size:15px;
+}
+
+.modal-wrap{
+  position: fixed !important;
+  inset: 0 !important;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.78);
+  z-index: 99999 !important;
+}
+.modal{
+  width: min(680px, 96vw);
+  max-height: 88vh;
+  overflow: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(0,245,255,.20);
+  background: #0b1220;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,.55),
+    0 0 0 1px rgba(0,245,255,.08) inset;
+  color: #eaf2ff;
+  position: relative;
+  z-index: 100000 !important;
+}
+.modal-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:16px 18px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.modal-title{
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:.04em;
+}
+#modalBody{
+  padding:18px;
+}
+.modal-foot{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  padding:16px 18px;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.modal-text{
+  width:100%;
+  min-height:140px;
+  resize:vertical;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  color:#eef4ff;
+  padding:12px;
+  outline:none;
+  margin-top:12px;
+}
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:14px;
+}
+.field label{
+  font-size:13px;
+  color: rgba(210,223,255,.82);
+}
+.icon-btn{
+  border:0;
+  background: transparent;
+  color:#dce8ff;
+  font-size:18px;
+  cursor:pointer;
+}
+.reaction-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.reaction-btn{
+  min-width:52px;
+  min-height:48px;
+  font-size:24px;
+}
+.mail-inline-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:16px;
+}
+.inline-action-box{
+  margin-top:14px;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+}
+.danger-box{
+  border:1px solid rgba(255,70,70,.35);
+  background:rgba(255,70,70,.06);
+}
+
+.detail-grid,
+.score-breakdown,
+.indicator-group,
+.reco-title{
+  display:none !important;
+}
+
+@media (max-width: 1100px){
+  .risk-top-card{
+    grid-template-columns: 1fr;
+    min-height:auto;
+  }
+  .risk-chart-wrap{
+    min-height:210px;
+  }
+  .overview-left{
+    min-height:auto;
+  }
+  .indicator-grid{
+    grid-template-columns: 1fr;
+  }
+  .overview-metrics{
+    grid-template-columns: 1fr;
+  }
+  .pie{
+    width:180px;
+    height:180px;
+  }
+}
+</style>
+
+<script>
+(function(){
+  let __connected = false;
+  let __loading = false;
+  let __box = "inbox";
+  let __selectedId = null;
+  let __lastPayload = null;
+  let __isStarred = false;
+  let __isArchived = false;
+  let __scanToken = 0;
+  let __toastTimer = null;
+  let __modalHandler = null;
+
+  const RX_KEY = "privguard_reactions_v1";
+  const PG_HIGH_ACTION_KEY = "privguard_high_risk_action_v1";
+
+  const __mailBoxes = {
+    inbox: [],
+    flagged: [],
+    archived: [],
+    deleted: []
+  };
+
+  function logAction(name, data) {
+    try { console.log("[PrivGuard Gmail]", name, data || ""); } catch (_) {}
+  }
+
+  function setBootLabel(text) {
+    const el = document.getElementById("loadingLabel");
+    if (el) el.textContent = text;
+  }
+
+  function toast(msg, kind="ok"){
+    const el = document.getElementById("toast");
+    if (!el) return;
+    el.className = "toast " + kind;
+    el.innerHTML = msg;
+    el.style.display = "block";
+    clearTimeout(__toastTimer);
+    __toastTimer = setTimeout(() => {
+      el.style.display = "none";
+    }, 3000);
+  }
+
+  async function safeJson(res) {
+    try {
+      return await res.json();
+    } catch (e) {
+      logAction("JSON_PARSE_ERROR", e);
+      return {};
+    }
+  }
+
+  async function fetchWithTimeout(url, ms=45000, opts={}) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms);
+    try {
+      return await fetch(url, { ...opts, signal: ctrl.signal });
+    } finally {
+      clearTimeout(t);
+    }
+  }
+
+  function escapeHtml(str){
+    return String(str || "").replace(/[&<>"']/g, m => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#039;"
+    }[m]));
+  }
+
+  function formatTime(internalDateStr){
+    const ms = parseInt(internalDateStr || "0", 10);
+    if (!ms) return "";
+    const d = new Date(ms), now = new Date();
+    return (d.toDateString() === now.toDateString())
+      ? d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})
+      : d.toLocaleDateString([], {month:"short", day:"numeric"});
+  }
+
+  function linkifyAndFormat(text){
+    const safe = escapeHtml(text);
+    const linked = safe.replace(/(https?:\/\/[^\s<]+|www\.[^\s<]+)/gi, (m) => {
+      const url = m.startsWith("www.") ? ("http://" + m) : m;
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="link">${m}</a>`;
+    });
+    return linked.replace(/\n/g, "<br/>");
+  }
+
+  function normalizeBox(box){
+    return ["inbox","flagged","archived","deleted"].includes(String(box || "").toLowerCase())
+      ? String(box).toLowerCase()
+      : "inbox";
+  }
+
+  function getCurrentBox(){
+    return normalizeBox(__box);
+  }
+
+  function cloneMessage(msg){
+    return JSON.parse(JSON.stringify(msg || {}));
+  }
+
+  function ensureLabelArray(msg){
+    if (!Array.isArray(msg.labelIds)) msg.labelIds = [];
+    return msg.labelIds;
+  }
+
+  function addLabel(msg, label){
+    const arr = ensureLabelArray(msg);
+    if (!arr.includes(label)) arr.push(label);
+  }
+
+  function removeLabel(msg, label){
+    const arr = ensureLabelArray(msg);
+    msg.labelIds = arr.filter(x => x !== label);
+  }
+
+  function isDeletedMessage(m){
+    const labels = Array.isArray(m?.labelIds) ? m.labelIds : [];
+    return labels.includes("TRASH") || labels.includes("DELETED");
+  }
+
+  function isFlaggedMessage(m){
+    const labels = Array.isArray(m?.labelIds) ? m.labelIds : [];
+    return labels.includes("STARRED");
+  }
+
+  function isArchivedMessage(m){
+    const labels = Array.isArray(m?.labelIds) ? m.labelIds : [];
+    return !labels.includes("INBOX") && !labels.includes("TRASH") && !labels.includes("DELETED");
+  }
+
+  function deriveBoxFromMessage(m){
+    if (isDeletedMessage(m)) return "deleted";
+    if (isFlaggedMessage(m)) return "flagged";
+    if (isArchivedMessage(m)) return "archived";
+    return "inbox";
+  }
+
+  function removeMessageFromAllBoxes(id){
+    Object.keys(__mailBoxes).forEach(box => {
+      __mailBoxes[box] = (__mailBoxes[box] || []).filter(m => m.id !== id);
+    });
+  }
+
+  function upsertMessageIntoBox(msg, box){
+    const targetBox = normalizeBox(box);
+    if (!msg || !msg.id) return;
+    removeMessageFromAllBoxes(msg.id);
+    __mailBoxes[targetBox].unshift(cloneMessage(msg));
+  }
+
+  function getMessageFromAnyBox(id){
+    for (const box of Object.keys(__mailBoxes)){
+      const found = (__mailBoxes[box] || []).find(m => m.id === id);
+      if (found) return cloneMessage(found);
+    }
+    return null;
+  }
+
+  function renderCurrentBoxFromCache(){
+    const box = getCurrentBox();
+    const msgs = __mailBoxes[box] || [];
+    const list = document.getElementById("inboxList");
+    if (!list) return;
+
+    if (!msgs.length){
+      list.innerHTML = "<div class='muted'>No messages in this view.</div>";
+      return;
+    }
+
+    list.innerHTML = msgs.map(m => {
+      const t = formatTime(m.internalDate);
+      const rx = getRx(m.id);
+      const rxHtml = rx ? `<span class="rx-pill">${escapeHtml(rx)}</span>` : "";
+      return `
+        <div class="inbox-item ${m.id===__selectedId ? "sel":""}" onclick="openAndScan('${m.id}')">
+          <div class="inbox-row">
+            <div class="mail-ico">✉</div>
+            <div class="mail-main">
+              <div class="mail-topline">
+                <div class="mail-subject">${escapeHtml(m.subject || "(no subject)")} ${rxHtml}</div>
+                <div class="mail-time">${escapeHtml(t)}</div>
+              </div>
+              <div class="mail-sender">${escapeHtml(m.from || "")}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function getRxMap(){
+    try { return JSON.parse(localStorage.getItem(RX_KEY) || "{}"); }
+    catch { return {}; }
+  }
+
+  function setRx(id, emoji){
+    const m = getRxMap();
+    if (!emoji) delete m[id];
+    else m[id] = emoji;
+    localStorage.setItem(RX_KEY, JSON.stringify(m));
+  }
+
+  function getRx(id){
+    const m = getRxMap();
+    return m[id] || "";
+  }
+
+  function getHighRiskAction(){
+    const v = (localStorage.getItem(PG_HIGH_ACTION_KEY) || "flag").toLowerCase();
+    return ["flag","delete","ask","none"].includes(v) ? v : "flag";
+  }
+
+  function setHighRiskAction(v){
+    localStorage.setItem(PG_HIGH_ACTION_KEY, v);
+  }
+
+  function openRiskSettings(){
+    const current = getHighRiskAction();
+
+    openModal(
+      "High-Risk Email Policy",
+      `
+        <div class="tiny-muted" style="margin-bottom:14px;">
+          Choose what PrivGuard should do automatically when an email is classified as <b>HIGH RISK</b> or <b>CRITICAL</b>.
+        </div>
+
+        <div class="field">
+          <label for="riskPolicy">Automatic action</label>
+          <select id="riskPolicy" class="input">
+            <option value="flag" ${current === "flag" ? "selected" : ""}>Flag suspicious email</option>
+            <option value="delete" ${current === "delete" ? "selected" : ""}>Delete suspicious email</option>
+            <option value="ask" ${current === "ask" ? "selected" : ""}>Ask me first</option>
+            <option value="none" ${current === "none" ? "selected" : ""}>Do nothing</option>
+          </select>
+        </div>
+
+        <div class="tiny-muted" style="margin-top:10px; line-height:1.5;">
+          Recommended: <b>Ask me first</b> or <b>Flag suspicious email</b>.
+        </div>
+      `,
+      "Save",
+      "",
+      async () => {
+        const val = (document.getElementById("riskPolicy")?.value || "flag").toLowerCase();
+        setHighRiskAction(val);
+        toast("Risk settings saved.", "ok");
+        closeModal();
+      }
+    );
+  }
+
+  function setLoading(on, text){
+    __loading = on;
+    const label = document.getElementById("loadingLabel");
+    const connectBtn = document.getElementById("connectBtn");
+    if (label) label.textContent = on ? (text || "Loading...") : "";
+    if (connectBtn) connectBtn.disabled = on;
+  }
+
+  function paintConnect(){
+    const btn = document.getElementById("connectBtn");
+    if (btn) btn.textContent = __connected ? "Disconnect" : "Connect Gmail";
+  }
+
+  function enableActions(on){
+    const ids = [
+      "btnReply","btnForward","btnReact","btnGmail","btnHtml",
+      "btnFlag","btnDeleteInline","btnArchive","btnExplain","rescanBtn"
+    ];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = !on;
+    });
+  }
+
+  function paintToggleButtons(){
+    const btnFlag = document.getElementById("btnFlag");
+    const btnArchive = document.getElementById("btnArchive");
+    if (btnFlag) btnFlag.textContent = __isStarred ? "Unflag" : "Flag";
+    if (btnArchive) btnArchive.textContent = __isArchived ? "Unarchive" : "Archive";
+  }
+
+  function syncActionState(){
+    const hasSelected = !!__selectedId;
+    enableActions(hasSelected);
+    paintToggleButtons();
+  }
+
+  function clampScore(value){
+    if (value === null || value === undefined) return 0;
+    if (typeof value === "string"){
+      const cleaned = value.split("/")[0].replace("%","").trim();
+      const n = parseFloat(cleaned);
+      if (!Number.isFinite(n)) return 0;
+      return Math.max(0, Math.min(100, Math.round(n)));
+    }
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 0;
+    return Math.max(0, Math.min(100, Math.round(n)));
+  }
+
+  function pickOverallScore(payload){
+    const rep = payload?.report || {};
+    const ux  = payload?.ux || {};
+    const panel = payload?.threat_panel || {};
+    const candidates = [
+      panel?.score,
+      payload?.email_result?.overall_score,
+      rep?.score,
+      rep?.overall_score,
+      rep?.overall_risk_score,
+      ux?.overall_score,
+      ux?.overall_risk_score,
+      payload?.overall_score,
+      payload?.overall_risk_score
+    ];
+    for (const v of candidates){
+      if (v !== null && v !== undefined && v !== "") return clampScore(v);
+    }
+    return 0;
+  }
+
+  function categoryFromScore(score){
+    const s = clampScore(score);
+    if (s <= 10) return "SAFE";
+    if (s <= 29) return "LOW RISK";
+    if (s <= 59) return "MEDIUM RISK";
+    if (s <= 84) return "HIGH RISK";
+    return "CRITICAL";
+  }
+
+  function colorKeyFromCategory(cat){
+    if (cat === "CRITICAL") return "critical";
+    if (cat === "HIGH RISK") return "high";
+    if (cat === "MEDIUM RISK") return "med";
+    return "low";
+  }
+
+  function hintForCategory(cat){
+    if (cat === "CRITICAL") return "This email looks very dangerous. Do not click anything or open any file.";
+    if (cat === "HIGH RISK") return "This email looks risky. Do not click links or open attachments until you confirm it is real.";
+    if (cat === "MEDIUM RISK") return "This email has some warning signs. Be careful before clicking links or replying.";
+    if (cat === "LOW RISK") return "This email has a few minor concerns, but it does not look highly dangerous.";
+    return "This email looks safe based on the checks completed so far.";
+  }
+
+  function setPieFromScore(score){
+    const s = clampScore(score);
+    const cat = categoryFromScore(s);
+    const colorKey = colorKeyFromCategory(cat);
+
+    const circumference = 2 * Math.PI * 44;
+    const offset = circumference - (s / 100) * circumference;
+
+    const ring = document.getElementById("scoreRing");
+    if (ring){
+      ring.style.strokeDasharray = `${circumference}`;
+      ring.style.strokeDashoffset = `${offset}`;
+      ring.classList.remove("low","med","high","critical");
+      ring.classList.add(colorKey);
+    }
+
+    ["segLow","segMed","segHigh","segCritical"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.opacity = "0.18";
+    });
+
+    const activeMap = { low: "segLow", med: "segMed", high: "segHigh", critical: "segCritical" };
+    const active = document.getElementById(activeMap[colorKey]);
+    if (active) active.style.opacity = "1";
+
+    const pieLabel = document.getElementById("pieLabel");
+    const pieScore = document.getElementById("pieScore");
+    const overviewScore = document.getElementById("overviewScore");
+    const overviewLevel = document.getElementById("overviewLevel");
+
+    if (pieLabel) pieLabel.textContent = cat;
+    if (pieScore) pieScore.textContent = `${s}/100`;
+    if (overviewScore) overviewScore.textContent = `${s}/100`;
+    if (overviewLevel) overviewLevel.textContent = cat;
+
+    return {score:s, category:cat, colorKey};
+  }
+
+  function setRiskUIFromScore(score){
+    const out = setPieFromScore(score);
+    const pill = document.getElementById("riskPill");
+    if (pill){
+      pill.style.display = "inline-flex";
+      pill.textContent = out.category;
+      pill.classList.remove("low","med","high","critical");
+      pill.classList.add(out.colorKey);
+    }
+
+    const hint = document.getElementById("riskHint");
+    if (hint) hint.textContent = hintForCategory(out.category);
+
+    const scanBox = document.getElementById("scanBox");
+    if (scanBox){
+      scanBox.classList.remove("risk-low","risk-med","risk-high","risk-critical");
+      if (out.colorKey === "low") scanBox.classList.add("risk-low");
+      if (out.colorKey === "med") scanBox.classList.add("risk-med");
+      if (out.colorKey === "high") scanBox.classList.add("risk-high");
+      if (out.colorKey === "critical") scanBox.classList.add("risk-critical");
+    }
+
+    return out;
+  }
+
+  function statusClass(status){
+    const s = String(status || "WARNING").toUpperCase();
+    if (s === "PASS") return "pass";
+    if (s === "FAIL") return "fail";
+    return "warning";
+  }
+
+  function renderIndicatorGrid(panel){
+    const grid = document.getElementById("indicatorGrid");
+    if (!grid) return;
+
+    const indicators = Array.isArray(panel?.indicators) ? panel.indicators : [];
+    const wanted = [
+      "SPF Result",
+      "DKIM Result",
+      "DMARC Result",
+      "Sender IP Reputation",
+      "Domain Reputation",
+      "Header Analysis"
+    ];
+
+    const mapped = indicators
+      .filter(x => wanted.includes(x.name))
+      .map(item => ({
+        name:
+          item.name === "SPF Result" ? "SPF" :
+          item.name === "DKIM Result" ? "DKIM" :
+          item.name === "DMARC Result" ? "DMARC" :
+          item.name,
+        status: item.status || "WARNING",
+        explanation: item.explanation || ""
+      }));
+
+    if (!mapped.length){
+      grid.innerHTML = `<div class="tiny-muted">No indicators available.</div>`;
+      return;
+    }
+
+    grid.innerHTML = mapped.map(item => `
+      <div class="indicator-card">
+        <div class="indicator-head">
+          <div class="indicator-name">${escapeHtml(item.name)}</div>
+          <div class="status-badge ${statusClass(item.status)}">${escapeHtml(item.status)}</div>
+        </div>
+        <div class="indicator-explain">${escapeHtml(item.explanation)}</div>
+      </div>
+    `).join("");
+  }
+
+  function renderDetailPanel(panel){
+    const details = panel?.details || {};
+    let explain = (details.ai_threat_explanation || panel?.simple_explanation || "").trim();
+
+    if (!explain){
+      explain = "This email was checked for the most important warning signs.\nYou should be careful before clicking links or opening files.";
+    }
+
+    let lines = explain.replace(/\r/g, "").split(/\n+/).map(x => x.trim()).filter(Boolean);
+    if (lines.length === 1){
+      lines = lines[0].split(/(?<=[.!?])\s+/).map(x => x.trim()).filter(Boolean);
+    }
+
+    lines = lines.slice(0, 5);
+    const detailExplain = document.getElementById("detailExplain");
+    if (detailExplain) detailExplain.textContent = lines.join("\n");
+  }
+
+  function validateConsistency(overallScore){
+    try{
+      const overall = clampScore(overallScore);
+      const expectedLevel = categoryFromScore(overall).toUpperCase();
+      const ringText = document.getElementById("pieScore")?.textContent || "";
+      const ringVal = Number((ringText.split("/")[0] || "NaN"));
+      const scannedText = document.getElementById("kvScore")?.textContent || "";
+      const scannedVal = Number((scannedText.split("/")[0] || "NaN"));
+      const badgeText = (document.getElementById("riskPill")?.textContent || "").toUpperCase();
+      const overviewText = (document.getElementById("overviewLevel")?.textContent || "").toUpperCase();
+      const mismatches = [];
+      if (ringVal !== overall) mismatches.push(`ring_chart_value=${ringVal} overall=${overall}`);
+      if (scannedVal !== overall) mismatches.push(`displayed_score=${scannedVal} overall=${overall}`);
+      if (badgeText !== expectedLevel) mismatches.push(`threat_badge=${badgeText} expected=${expectedLevel}`);
+      if (overviewText !== expectedLevel) mismatches.push(`overview_level=${overviewText} expected=${expectedLevel}`);
+      if (mismatches.length) console.warn("[PrivGuard][CONSISTENCY WARNING]", mismatches.join(" | "));
+    } catch (e){
+      console.warn("[PrivGuard][CONSISTENCY WARNING] validation failed", e);
+    }
+  }
+
+  async function enforcePolicyAfterScan(score){
+    const s = clampScore(score);
+    const cat = categoryFromScore(s);
+
+    if (cat === "SAFE") return;
+    if (cat === "LOW RISK"){
+      toast("Low risk: optional caution advised.", "warn");
+      return;
+    }
+    if (cat === "MEDIUM RISK"){
+      toast("Medium risk: verify sender and links before interacting.", "warn");
+      return;
+    }
+
+    if (cat === "HIGH RISK" || cat === "CRITICAL"){
+      const action = getHighRiskAction();
+      const body = `
+        <div class="tiny-muted" style="margin-bottom:10px;">
+          This email is classified as <b>${cat}</b> (${s}/100).
+        </div>
+        <div class="tiny-muted" style="line-height:1.45;">
+          Recommended: do not click links or open attachments.
+        </div>
+        <div class="tiny-muted" style="margin-top:10px;">
+          Automation setting: <b>${action.toUpperCase()}</b>
+        </div>
+      `;
+
+      if (action === "none" || action === "ask"){
+        openModal("High-Risk Alert", body, "Close", "danger", async()=>closeModal());
+        return;
+      }
+
+      openModal("High-Risk Alert", body, "Proceed", "danger", async()=>closeModal());
+
+      setTimeout(async () => {
+        try{
+          if (!__selectedId) return;
+          if (action === "delete") await actionDelete();
+          else await actionStarToggle();
+        } catch (_) {}
+      }, 900);
+    }
+  }
+
+  function hideInlineBoxes(){
+    ["replyBox","forwardBox","reactBox","deleteBox"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
+  }
+
+  function showReplyBox(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+    hideInlineBoxes();
+    const box = document.getElementById("replyBox");
+    if (box) box.style.display = "block";
+  }
+
+  function showForwardBox(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+    hideInlineBoxes();
+    const box = document.getElementById("forwardBox");
+    if (box) box.style.display = "block";
+  }
+
+  function toggleReactBox(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+    const box = document.getElementById("reactBox");
+    if (!box) return;
+    const isOpen = box.style.display === "block";
+    hideInlineBoxes();
+    box.style.display = isOpen ? "none" : "block";
+  }
+
+  function toggleDeleteBox(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+    const box = document.getElementById("deleteBox");
+    if (!box) return;
+    const isOpen = box.style.display === "block";
+    hideInlineBoxes();
+    box.style.display = isOpen ? "none" : "block";
+  }
+
+  function clearPanels(clearSelection=true){
+    if (clearSelection){
+      __selectedId = null;
+      __lastPayload = null;
+    }
+
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    };
+
+    setText("scanTitle", "Select an email to scan");
+    const scanBar = document.getElementById("scanBar");
+    if (scanBar) scanBar.style.width = "0%";
+    setText("scanStatus", "Waiting...");
+    const scanStatus = document.getElementById("scanStatus");
+    if (scanStatus) scanStatus.className = "scan-status";
+
+    ["kvAttach","kvLinks","kvPhish","kvScore"].forEach(id => setText(id, "-"));
+    setText("mvSubject", "No email selected");
+
+    const mvMeta = document.getElementById("mvMeta");
+    if (mvMeta) mvMeta.innerHTML = "";
+    const mvAttachments = document.getElementById("mvAttachments");
+    if (mvAttachments) mvAttachments.innerHTML = "";
+    const mvBody = document.getElementById("mvBody");
+    if (mvBody) mvBody.innerHTML = "Select an email to view its full content safely inside PrivGuard.";
+
+    const replyText = document.getElementById("replyText");
+    if (replyText) replyText.value = "";
+    const fwdTo = document.getElementById("fwdTo");
+    if (fwdTo) fwdTo.value = "";
+    const fwdText = document.getElementById("fwdText");
+    if (fwdText) fwdText.value = "";
+
+    hideInlineBoxes();
+
+    setText("threatHeadline", "No email selected");
+    const recoList = document.getElementById("recoList");
+    if (recoList) recoList.innerHTML = "";
+    const indicatorGrid = document.getElementById("indicatorGrid");
+    if (indicatorGrid) indicatorGrid.innerHTML = `<div class="tiny-muted">No indicators available.</div>`;
+    setText("detailExplain", "");
+    const detailPanel = document.getElementById("detailPanel");
+    if (detailPanel) detailPanel.style.display = "none";
+    const btnExplain = document.getElementById("btnExplain");
+    if (btnExplain) btnExplain.textContent = "View Detailed Analysis";
+
+    const riskPill = document.getElementById("riskPill");
+    if (riskPill) riskPill.style.display = "none";
+    setText("riskHint", "");
+    setText("overviewScore", "0/100");
+    setText("overviewLevel", "SAFE");
+    setText("pieLabel", "SAFE");
+    setText("pieScore", "0/100");
+
+    __isStarred = false;
+    __isArchived = false;
+    setPieFromScore(0);
+    syncActionState();
+
+    const scanBox = document.getElementById("scanBox");
+    if (scanBox) scanBox.classList.remove("risk-low","risk-med","risk-high","risk-critical");
+  }
+
+  async function refreshStatus(){
+    const r = await fetch("/api/gmail/status");
+    const s = await safeJson(r);
+    __connected = !!s.connected;
+    paintConnect();
+
+    if (!__connected){
+      const connLine = document.getElementById("connLine");
+      const inboxList = document.getElementById("inboxList");
+      if (connLine) connLine.textContent = "Disconnected. Connect Gmail to continue.";
+      if (inboxList) inboxList.innerHTML = "<div class='muted'>Connect Gmail to load inbox.</div>";
+      enableActions(false);
+      return;
+    }
+
+    try{
+      const pr = await fetch("/api/gmail/profile");
+      const connLine = document.getElementById("connLine");
+      if (pr.ok){
+        const pj = await safeJson(pr);
+        const email = pj?.profile?.emailAddress || "";
+        if (connLine) connLine.textContent = email ? ("Connected: " + email) : "Connected.";
+      } else {
+        if (connLine) connLine.textContent = "Connected.";
+      }
+    } catch {
+      const connLine = document.getElementById("connLine");
+      if (connLine) connLine.textContent = "Connected.";
+    }
+  }
+
+  async function loadInbox(force=false){
+    if (!__connected || __loading) return;
+
+    const box = getCurrentBox();
+    const list = document.getElementById("inboxList");
+    if (!force && (__mailBoxes[box] || []).length){
+      renderCurrentBoxFromCache();
+      return;
+    }
+
+    const max = (document.getElementById("max")?.value || "100").trim();
+    setLoading(true, "Loading inbox...");
+    if (list) list.innerHTML = "<div class='muted'>Loading...</div>";
+
+    try{
+      const r = await fetchWithTimeout(`/api/gmail/inbox?max=${encodeURIComponent(max)}&box=${encodeURIComponent(box)}`, 45000);
+      const data = await safeJson(r);
+
+      if (!r.ok){
+        if (list) list.innerHTML = "<div class='err'>" + escapeHtml(data.error || "Failed") + "</div>";
+        return;
+      }
+
+      const warn = data.warning;
+      const msgs = Array.isArray(data.messages) ? data.messages : [];
+      __mailBoxes[box] = msgs.map(cloneMessage);
+
+      if (warn){
+        if (list){
+          list.innerHTML = `<div class="warn">Partial load: ${escapeHtml(warn)}<br/>Try lowering Max emails temporarily and click Refresh.</div>`;
+        }
+        if (msgs.length) renderCurrentBoxFromCache();
+        return;
+      }
+
+      renderCurrentBoxFromCache();
+    } catch (e) {
+      logAction("INBOX_LOAD_ERROR", e);
+      if (list) list.innerHTML = `<div class="err">Inbox request timed out. Try reducing Max emails temporarily and Refresh.</div>`;
+    } finally {
+      setLoading(false, "");
+    }
+  }
+
+  async function openAndScan(id){
+    if (__loading || !id) return;
+
+    __selectedId = id;
+    __scanToken++;
+    const token = __scanToken;
+    syncActionState();
+    renderCurrentBoxFromCache();
+    hideInlineBoxes();
+
+    const detailPanel = document.getElementById("detailPanel");
+    if (detailPanel) detailPanel.style.display = "none";
+    const btnExplain = document.getElementById("btnExplain");
+    if (btnExplain) btnExplain.textContent = "View Detailed Analysis";
+    const indicatorGrid = document.getElementById("indicatorGrid");
+    if (indicatorGrid) indicatorGrid.innerHTML = `<div class="tiny-muted">Scanning indicators...</div>`;
+    const detailExplain = document.getElementById("detailExplain");
+    if (detailExplain) detailExplain.textContent = "";
+    const recoList = document.getElementById("recoList");
+    if (recoList) recoList.innerHTML = "";
+    const riskPill = document.getElementById("riskPill");
+    if (riskPill) riskPill.style.display = "none";
+    const riskHint = document.getElementById("riskHint");
+    if (riskHint) riskHint.textContent = "";
+    setPieFromScore(0);
+
+    const scanTitle = document.getElementById("scanTitle");
+    const scanStatus = document.getElementById("scanStatus");
+    const scanBar = document.getElementById("scanBar");
+
+    if (scanTitle) scanTitle.textContent = "SCANNING EMAIL...";
+    if (scanStatus){
+      scanStatus.textContent = "Scanning in progress…";
+      scanStatus.className = "scan-status scanning";
+    }
+    if (scanBar) scanBar.style.width = "35%";
+
+    setLoading(true, "Scanning email...");
+
+    try{
+      const r = await fetchWithTimeout("/api/gmail/message/" + encodeURIComponent(id), 45000);
+      const data = await safeJson(r);
+      if (token !== __scanToken || __selectedId !== id) return;
+
+      if (!r.ok){
+        toast(data.error || "Failed to read email", "bad");
+        return;
+      }
+
+      __lastPayload = data;
+      if (scanBar) scanBar.style.width = "82%";
+
+      const msg = data.message || {};
+      const rep = data.report || {};
+      const ux  = data.ux || {};
+      const panel = data.threat_panel || {};
+
+      upsertMessageIntoBox(msg, deriveBoxFromMessage(msg));
+
+      const labels = Array.isArray(msg.labelIds) ? msg.labelIds : [];
+      __isStarred = labels.includes("STARRED");
+      __isArchived = !labels.includes("INBOX") && !labels.includes("TRASH");
+      syncActionState();
+
+      const score = pickOverallScore(data);
+      const risk = setRiskUIFromScore(score);
+
+      const urlsCount = (rep.urls || []).length;
+      const attsCount = (msg.attachments || []).length;
+      const setTextSafe = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      };
+
+      setTextSafe("kvAttach", String(attsCount));
+      setTextSafe("kvLinks", String(urlsCount));
+      setTextSafe("kvPhish", risk.category);
+      setTextSafe("kvScore", `${risk.score}/100`);
+      setTextSafe("mvSubject", msg.subject || "(no subject)");
+
+      const mvMetaEl = document.getElementById("mvMeta");
+      if (mvMetaEl){
+        mvMetaEl.innerHTML =
+          `<div><b>From:</b> ${escapeHtml(msg.from || "")}</div>
+           <div><b>To:</b> ${escapeHtml(msg.to || "")}</div>
+           <div><b>Date:</b> ${escapeHtml(msg.date || "")}</div>`;
+      }
+
+      const a = msg.attachments || [];
+      const mvAttachmentsEl = document.getElementById("mvAttachments");
+      if (mvAttachmentsEl){
+        mvAttachmentsEl.innerHTML = a.length
+          ? a.map(x => `<div class="attachment">📎 ${escapeHtml(x.filename)} <span class="tiny-muted">(${escapeHtml(x.mimeType || "")})</span></div>`).join("")
+          : `<div class="tiny-muted">No attachments</div>`;
+      }
+
+      const bodyText = (msg.text && msg.text.trim()) ? msg.text : (msg.snippet || "");
+      const mvBodyEl = document.getElementById("mvBody");
+      if (mvBodyEl) mvBodyEl.innerHTML = linkifyAndFormat(bodyText);
+
+      setTextSafe("threatHeadline", ux.headline || `${risk.category} Email`);
+      setTextSafe("overviewScore", `${risk.score}/100`);
+      setTextSafe("overviewLevel", panel.level || risk.category);
+      setTextSafe("riskHint", panel.simple_explanation || hintForCategory(risk.category));
+
+      renderIndicatorGrid(panel);
+      renderDetailPanel(panel);
+
+      const recs = [];
+      if (risk.category === "CRITICAL" || risk.category === "HIGH RISK"){
+        recs.push("Do not click any link or open any file.");
+        recs.push("Verify the sender before interacting with the email.");
+        recs.push("If unsure, report this email to security.");
+      } else if (risk.category === "MEDIUM RISK"){
+        recs.push("Verify the sender before interacting with the email.");
+        recs.push("Do not click the login link unless you confirm it is legitimate.");
+        recs.push("If unsure, report this email to security.");
+      } else if (risk.category === "LOW RISK"){
+        recs.push("Use normal caution before clicking links.");
+        recs.push("Verify the sender if the message feels unusual.");
+      } else {
+        recs.push("No major warning signs were found.");
+        recs.push("Still use normal caution with unexpected links or files.");
+      }
+
+      if (recoList){
+        recoList.innerHTML = recs.slice(0, 3).map(x => `
+          <div class="reco-item"><div class="tick"></div><div>${escapeHtml(x)}</div></div>
+        `).join("");
+      }
+
+      validateConsistency(risk.score);
+      enforcePolicyAfterScan(risk.score);
+
+      if (scanBar) scanBar.style.width = "100%";
+      if (scanStatus){
+        scanStatus.textContent = "Email scanned ✅";
+        scanStatus.className = "scan-status done";
+      }
+      if (scanTitle) scanTitle.textContent = "EMAIL SCANNED";
+
+      toast("Email scanned successfully.", "ok");
+      renderCurrentBoxFromCache();
+    } catch (e) {
+      logAction("SCAN_ERROR", e);
+      if (scanStatus){
+        scanStatus.textContent = "Scan timed out. Click Rescan.";
+        scanStatus.className = "scan-status";
+      }
+      toast("Scan timed out. Try Rescan.", "bad");
+    } finally {
+      setLoading(false, "");
+      syncActionState();
+    }
+  }
+
+  function openModal(title, innerHtml, okText="OK", okKind="", handler=null){
+    const wrap = document.getElementById("modalWrap");
+    const titleEl = document.getElementById("modalTitle");
+    const bodyEl = document.getElementById("modalBody");
+    const okEl = document.getElementById("modalOk");
+
+    if (!wrap || !titleEl || !bodyEl || !okEl){
+      toast("Modal UI is missing from the page.", "bad");
+      return;
+    }
+
+    titleEl.textContent = title || "Action";
+    bodyEl.innerHTML = innerHtml || "";
+    okEl.textContent = okText || "OK";
+    okEl.className = "tab-btn " + (okKind || "");
+    __modalHandler = handler;
+
+    wrap.style.display = "flex";
+    wrap.style.visibility = "visible";
+    wrap.style.opacity = "1";
+    wrap.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+
+    okEl.onclick = async function () {
+      await modalOk();
+    };
+  }
+
+  function closeModal(){
+    const wrap = document.getElementById("modalWrap");
+    if (wrap){
+      wrap.style.display = "none";
+      wrap.style.visibility = "hidden";
+      wrap.style.opacity = "0";
+      wrap.setAttribute("aria-hidden", "true");
+    }
+    document.body.style.overflow = "";
+    __modalHandler = null;
+  }
+
+  async function modalOk(){
+    if (typeof __modalHandler !== "function"){
+      toast("No modal action is attached.", "bad");
+      return;
+    }
+
+    try{
+      await __modalHandler();
+    } catch (e) {
+      console.error("[PrivGuard Gmail] modalOk error:", e);
+      toast("Action failed.", "bad");
+    }
+  }
+
+  async function sendReply(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+
+    const body = (document.getElementById("replyText")?.value || "").trim();
+    if (!body){
+      toast("Write something first.", "bad");
+      return;
+    }
+
+    try{
+      const r = await fetchWithTimeout("/api/gmail/reply", 45000, {
+        method:"POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({id: __selectedId, body})
+      });
+
+      const j = await safeJson(r);
+      logAction("REPLY_STATUS", { status: r.status, data: j });
+
+      if (!r.ok){
+        toast(j.error || "Reply failed", "bad");
+        return;
+      }
+
+      toast(j.message || "Reply sent successfully.", "ok");
+      document.getElementById("replyText").value = "";
+      hideInlineBoxes();
+      syncActionState();
+    } catch (e) {
+      logAction("REPLY_ERROR", e);
+      toast("Reply failed", "bad");
+    }
+  }
+
+  async function sendForward(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+
+    const to = (document.getElementById("fwdTo")?.value || "").trim();
+    const body = (document.getElementById("fwdText")?.value || "").trim();
+
+    if (!to){
+      toast("Enter recipient email.", "bad");
+      return;
+    }
+
+    try{
+      const r = await fetchWithTimeout("/api/gmail/forward", 45000, {
+        method:"POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({id: __selectedId, to, body})
+      });
+
+      const j = await safeJson(r);
+      logAction("FORWARD_STATUS", { status: r.status, data: j });
+
+      if (!r.ok){
+        toast(j.error || "Forward failed", "bad");
+        return;
+      }
+
+      toast(j.message || "Forward sent successfully.", "ok");
+      document.getElementById("fwdTo").value = "";
+      document.getElementById("fwdText").value = "";
+      hideInlineBoxes();
+      syncActionState();
+    } catch (e) {
+      logAction("FORWARD_ERROR", e);
+      toast("Forward failed", "bad");
+    }
+  }
+
+  function reactSet(emoji){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+
+    setRx(__selectedId, emoji);
+    toast(`Reaction ${emoji} saved.`, "ok");
+    hideInlineBoxes();
+    renderCurrentBoxFromCache();
+    syncActionState();
+  }
+
+  async function actionStarToggle(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+
+    const id = __selectedId;
+    const next = !__isStarred;
+
+    try{
+      const r = await fetchWithTimeout("/api/gmail/star", 45000, {
+        method:"POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({id, starred: next})
+      });
+      const j = await safeJson(r);
+      logAction("STAR_STATUS", { status: r.status, data: j });
+
+      if (!r.ok){
+        toast(j.error || "Flag action failed.", "bad");
+        return;
+      }
+
+      let msg = getMessageFromAnyBox(id) || (__lastPayload?.message ? cloneMessage(__lastPayload.message) : {id});
+      if (next){
+        addLabel(msg, "STARRED");
+        removeLabel(msg, "TRASH");
+        removeLabel(msg, "DELETED");
+        removeLabel(msg, "INBOX");
+        upsertMessageIntoBox(msg, "flagged");
+        __isStarred = true;
+        toast(j.message || "Email moved to flagged.", "ok");
+        if (getCurrentBox() !== "flagged") clearPanels(false);
+      } else {
+        removeLabel(msg, "STARRED");
+        addLabel(msg, "INBOX");
+        removeLabel(msg, "TRASH");
+        removeLabel(msg, "DELETED");
+        upsertMessageIntoBox(msg, "inbox");
+        __isStarred = false;
+        __isArchived = false;
+        toast(j.message || "Email moved to inbox.", "ok");
+        if (getCurrentBox() !== "inbox") clearPanels(false);
+      }
+
+      renderCurrentBoxFromCache();
+      syncActionState();
+    } catch (e) {
+      logAction("STAR_ERROR", e);
+      toast("Flag action failed.", "bad");
+    }
+  }
+
+  async function actionArchiveToggle(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+
+    const id = __selectedId;
+    const endpoint = __isArchived ? "/api/gmail/unarchive" : "/api/gmail/archive";
+
+    try{
+      const r = await fetchWithTimeout(endpoint, 45000, {
+        method:"POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({id})
+      });
+      const j = await safeJson(r);
+      logAction("ARCHIVE_STATUS", { status: r.status, data: j });
+
+      if (!r.ok){
+        toast(j.error || "Archive action failed", "bad");
+        return;
+      }
+
+      let msg = getMessageFromAnyBox(id) || (__lastPayload?.message ? cloneMessage(__lastPayload.message) : {id});
+
+      if (__isArchived){
+        addLabel(msg, "INBOX");
+        removeLabel(msg, "TRASH");
+        removeLabel(msg, "DELETED");
+        upsertMessageIntoBox(msg, "inbox");
+        __isArchived = false;
+        toast(j.message || "Email moved back to inbox.", "ok");
+        if (getCurrentBox() !== "inbox") clearPanels(false);
+      } else {
+        removeLabel(msg, "INBOX");
+        removeLabel(msg, "TRASH");
+        removeLabel(msg, "DELETED");
+        upsertMessageIntoBox(msg, "archived");
+        __isArchived = true;
+        toast(j.message || "Email archived successfully.", "ok");
+        if (getCurrentBox() !== "archived") clearPanels(false);
+      }
+
+      renderCurrentBoxFromCache();
+      syncActionState();
+    } catch (e) {
+      logAction("ARCHIVE_ERROR", e);
+      toast("Archive action failed.", "bad");
+    }
+  }
+
+  async function actionDelete(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+
+    const id = __selectedId;
+
+    try{
+      const r = await fetchWithTimeout("/api/gmail/delete", 45000, {
+        method:"POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({id})
+      });
+
+      const j = await safeJson(r);
+      logAction("DELETE_STATUS", { status: r.status, data: j });
+
+      if (!r.ok){
+        toast(j.error || "Delete failed", "bad");
+        return;
+      }
+
+      let msg = getMessageFromAnyBox(id) || (__lastPayload?.message ? cloneMessage(__lastPayload.message) : {id});
+      addLabel(msg, "TRASH");
+      addLabel(msg, "DELETED");
+      removeLabel(msg, "INBOX");
+      upsertMessageIntoBox(msg, "deleted");
+
+      __selectedId = null;
+      __lastPayload = null;
+      __isStarred = false;
+      __isArchived = false;
+
+      hideInlineBoxes();
+      showUndo();
+      clearPanels(false);
+      renderCurrentBoxFromCache();
+      syncActionState();
+    } catch (e) {
+      logAction("DELETE_ERROR", e);
+      toast("Delete failed", "bad");
+    }
+  }
+
+  function showUndo(){
+    const el = document.getElementById("toast");
+    if (!el) return;
+    el.className = "toast warn";
+    el.innerHTML = `Email deleted. <button class="undo-btn" type="button" id="undoDeleteBtn">Undo</button>`;
+    el.style.display = "block";
+    const undoBtn = document.getElementById("undoDeleteBtn");
+    if (undoBtn) undoBtn.addEventListener("click", undoDelete, { once: true });
+    clearTimeout(__toastTimer);
+    __toastTimer = setTimeout(() => { el.style.display = "none"; }, 6000);
+  }
+
+  async function undoDelete(){
+    try{
+      const r = await fetchWithTimeout("/api/gmail/undo_delete", 45000, {method:"POST"});
+      const j = await safeJson(r);
+      logAction("UNDO_DELETE_STATUS", { status: r.status, data: j });
+
+      if (!r.ok){
+        toast(j.error || "Undo failed", "bad");
+        return;
+      }
+
+      await loadInbox(true);
+      await refreshStatus();
+      toast(j.message || "Email restored to inbox.", "ok");
+    } catch (e) {
+      logAction("UNDO_DELETE_ERROR", e);
+      toast("Undo failed", "bad");
+    }
+  }
+
+  function viewInGmail(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+    window.open("https://mail.google.com/mail/u/0/#inbox/" + encodeURIComponent(__selectedId), "_blank", "noopener,noreferrer");
+  }
+
+  function viewHtml(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+    window.open("/api/gmail/html/" + encodeURIComponent(__selectedId), "_blank", "noopener,noreferrer");
+  }
+
+  function rescan(){
+    if (!__selectedId){
+      toast("Select an email first.", "bad");
+      return;
+    }
+    openAndScan(__selectedId);
+  }
+
+  function toggleDetailedAnalysis(){
+    if (!__lastPayload) return;
+    const panel = document.getElementById("detailPanel");
+    const btn = document.getElementById("btnExplain");
+    if (!panel || !btn) return;
+    const willShow = panel.style.display === "none" || !panel.style.display;
+    panel.style.display = willShow ? "block" : "none";
+    btn.textContent = willShow ? "Hide Detailed Analysis" : "View Detailed Analysis";
+  }
+
+  function toggleFullscreen(id){
+    const p = document.getElementById(id);
+    const grid = document.getElementById("grid");
+    const backdrop = document.getElementById("fsBackdrop");
+    if (!p || !grid || !backdrop) return;
+
+    const isFS = p.classList.contains("fullscreen");
+    document.querySelectorAll(".cyber-panel").forEach(x => x.classList.remove("fullscreen"));
+    grid.classList.remove("has-fullscreen");
+    backdrop.style.display = "none";
+
+    if (!isFS){
+      p.classList.add("fullscreen");
+      grid.classList.add("has-fullscreen");
+      backdrop.style.display = "block";
+    }
+  }
+
+  function exitFullscreen(){
+    document.querySelectorAll(".cyber-panel").forEach(x => x.classList.remove("fullscreen"));
+    const grid = document.getElementById("grid");
+    const fsBackdrop = document.getElementById("fsBackdrop");
+    if (grid) grid.classList.remove("has-fullscreen");
+    if (fsBackdrop) fsBackdrop.style.display = "none";
+  }
+
+  function setBox(box){
+    __box = normalizeBox(box);
+
+    document.getElementById("tabInbox")?.classList.toggle("active", __box === "inbox");
+    document.getElementById("tabFlagged")?.classList.toggle("active", __box === "flagged");
+    document.getElementById("tabArchived")?.classList.toggle("active", __box === "archived");
+    document.getElementById("tabDeleted")?.classList.toggle("active", __box === "deleted");
+
+    if ((__mailBoxes[__box] || []).length){
+      renderCurrentBoxFromCache();
+    } else {
+      loadInbox(true);
+    }
+  }
+
+  function toggleConnect(){
+    if (__loading) return;
+    if (!__connected){
+      window.location.href = "/api/gmail/connect";
+      return;
+    }
+
+    setLoading(true, "Disconnecting...");
+    fetch("/api/gmail/disconnect", {method:"POST"})
+      .then(() => {
+        __selectedId = null;
+        __lastPayload = null;
+        Object.keys(__mailBoxes).forEach(box => __mailBoxes[box] = []);
+        clearPanels(false);
+      })
+      .finally(() => {
+        setLoading(false, "");
+        refreshStatus();
+      });
+  }
+
+  async function refreshAll(){
+    await refreshStatus();
+    if (__connected) await loadInbox(true);
+  }
+
+  document.getElementById("modalWrap")?.addEventListener("click", (e) => {
+    if (e.target && e.target.id === "modalWrap") closeModal();
+  });
+
+  document.addEventListener("click", (e) => {
+    const b = e.target && e.target.closest ? e.target.closest("button") : null;
+    if (!b) return;
+    b.classList.add("clicked");
+    setTimeout(() => b.classList.remove("clicked"), 180);
+  });
+
+  window.showReplyBox = showReplyBox;
+  window.showForwardBox = showForwardBox;
+  window.toggleReactBox = toggleReactBox;
+  window.toggleDeleteBox = toggleDeleteBox;
+  window.hideInlineBoxes = hideInlineBoxes;
+  window.sendReply = sendReply;
+  window.sendForward = sendForward;
+  window.reactSet = reactSet;
+  window.actionDelete = actionDelete;
+  window.actionStarToggle = actionStarToggle;
+  window.actionArchiveToggle = actionArchiveToggle;
+  window.viewInGmail = viewInGmail;
+  window.viewHtml = viewHtml;
+  window.rescan = rescan;
+  window.setBox = setBox;
+  window.toggleConnect = toggleConnect;
+  window.refreshAll = refreshAll;
+  window.openAndScan = openAndScan;
+  window.toggleDetailedAnalysis = toggleDetailedAnalysis;
+  window.openRiskSettings = openRiskSettings;
+  window.closeModal = closeModal;
+  window.modalOk = modalOk;
+  window.toggleFullscreen = toggleFullscreen;
+  window.exitFullscreen = exitFullscreen;
+
+  clearPanels(false);
+  syncActionState();
+  setBootLabel("Gmail script booted");
+
+  setTimeout(() => {
+    logAction("INITIAL_REFRESH");
+    refreshAll();
+  }, 50);
+})();
+</script>
