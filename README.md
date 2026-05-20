@@ -1,86 +1,160 @@
-# PrivGuard Web (Built from your PrivGuard groundwork)
+# PrivGuard
 
-This project converts your existing PrivGuard desktop groundwork (scan + analyze + crypto modules) into a **web app**:
-- **Backend**: FastAPI + Gmail OAuth (web server flow) + SQLite (dev)
-- **Frontend**: React (Vite) + Tailwind
+PrivGuard is a Flask-based cybersecurity and privacy platform that transforms Gmail into a monitored security environment for individual users.
 
-## 0) Security note
-Do **not** commit or deploy any `credentials.json` or `token.json` from the desktop project.
-For the web app, tokens are stored **per user** in the database and encrypted.
+The platform combines email threat intelligence, phishing detection, encryption systems, forensic analysis, password auditing, IP reputation checks, and AI-assisted threat explanations into a unified web application.
 
 ---
 
-## 1) Backend setup (FastAPI)
+## Features
 
-### 1.1 Create a Google OAuth client (Web application)
-In Google Cloud Console:
-- Enable Gmail API
-- Create OAuth client: **Web application**
-- Authorized redirect URI:
-  - `http://localhost:8000/api/gmail/oauth/callback` (dev)
-- Download the client secret JSON and save it to:
-  - `backend/credentials/google_client_secret.json`
+### Gmail Scanner
+- Gmail OAuth 2.0 integration
+- Email risk scoring (LOW / MEDIUM / HIGH)
+- SPF/DKIM/DMARC validation
+- Phishing link detection
+- Attachment inspection
+- Spoofing and anomaly analysis
 
-### 1.2 Configure env
-Copy:
-- `backend/.env.example` -> `backend/.env`
+### AES-256-GCM Crypto Tool
+- File encryption and decryption
+- AES-256-GCM encryption
+- Scrypt key derivation
+- Custom `.pgc1` encrypted binary format
+- Async progress tracking
 
-Generate a Fernet key:
-```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
+### Password Strength Analyser
+- Real-time password scoring
+- Entropy calculation
+- Pattern detection
+- Crack-time estimation
 
-Set in `.env`:
-- `JWT_SECRET` (long random)
-- `TOKEN_ENC_KEY` (Fernet key)
+### Phishing URL Checker
+- URL heuristic analysis
+- WHOIS domain age checks
+- Google Safe Browsing integration
+- VirusTotal scanning
 
-### 1.3 Install + run
-```bash
-cd backend
-python -m venv .venv
-# activate venv
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
-```
+### Email Header Analyser
+- Email forensic analysis
+- SPF/DKIM/DMARC verification
+- Origin IP extraction
+- Header anomaly detection
 
-Backend health:
-- `GET http://localhost:8000/api/health`
+### IP Reputation Tool
+- AbuseIPDB integration
+- VirusTotal reputation checks
+- IPInfo intelligence
+- Normalised risk verdicts
+
+### Quick File Scanner
+- SHA-256 and MD5 hashing
+- Shannon entropy analysis
+- MIME mismatch detection
+- EICAR signature detection
+
+### Email Centre
+- SMTP email sending
+- CC/BCC support
+- HTML email rendering
+- Attachment support
+- Draft saving
+- Sent logs
+- Phishing content warnings
+
+### AI Email Explainer
+- GPT-powered email explanation
+- Human-readable threat interpretation
+- Rule-based fallback system
+
+### Admin Dashboard
+- SOC-style monitoring dashboard
+- KPI cards and analytics
+- Threat reports
+- Chart.js visualisations
+- Auto-refresh functionality
+
+### Authentication System
+- User registration and login
+- bcrypt password hashing
+- Google reCAPTCHA v2
+- Account lockout protection
+- Password reset functionality
+- Role-based access control
 
 ---
 
-## 2) Frontend setup (React)
+## Technologies Used
 
-Copy:
-- `frontend/.env.example` -> `frontend/.env` (optional)
-
-Run:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Open:
-- `http://localhost:5173`
-
----
-
-## 3) How the Gmail linking works
-1. Sign up / login (JWT stored in browser localStorage)
-2. Click **Connect Gmail**
-3. Google consent screen opens
-4. Google redirects back to backend callback; backend stores encrypted token in DB
-5. Back to dashboard
-6. Click **Scan Now** to analyze recent emails on demand
+- Python
+- Flask
+- SQLite
+- HTML/CSS
+- JavaScript
+- Jinja2
+- Chart.js
+- Cryptography
+- OAuth 2.0
+- VirusTotal API
+- Google Safe Browsing API
+- AbuseIPDB API
 
 ---
 
-## 4) Next upgrades (recommended)
-- Replace SQLite with PostgreSQL for production
-- Add per-user scan scheduling (optional)
-- Add attachment download + scanning (requires more Gmail scopes + careful handling)
-- Add role-based access, admin reporting, audit logs
+## Project Purpose
 
+PrivGuard was developed as a cybersecurity-focused platform aimed at giving individual users enterprise-style email threat visibility, privacy protection, and secure communication tools through a web-based interface.
+
+---
+
+## Screenshots
+### Authentication Pages
+<img width="422" height="247" alt="image" src="https://github.com/user-attachments/assets/4a0cd8dc-2ffe-4dbc-b493-71ea74c971d0" />
+### Main Dashboard and Navigation
+<img width="437" height="221" alt="image" src="https://github.com/user-attachments/assets/a22eeaf3-5df1-4854-a0ec-c25e22e43aa3" />
+### Gmail Scanner Interface
+<img width="396" height="243" alt="image" src="https://github.com/user-attachments/assets/6eac6085-9d9e-43dc-936e-3426137e391d" />
+### Crypto Tool Interface
+<img width="437" height="268" alt="image" src="https://github.com/user-attachments/assets/72204418-bbd4-4ecf-8e32-e39f0c4c53a2" />
+###  Password Analyser Module
+<img width="410" height="273" alt="image" src="https://github.com/user-attachments/assets/9350188a-e6fe-4056-9746-7df18ac31cc1" />
+### Phishing URL Checker
+<img width="399" height="244" alt="image" src="https://github.com/user-attachments/assets/1b74fb0a-f065-4a80-98df-e8c4be7e5ed2" />
+### Email Header Analyser
+<img width="389" height="262" alt="image" src="https://github.com/user-attachments/assets/44c7f27a-06ea-4c46-8d2f-5bdd2d5ac7b6" />
+### IP Reputation Tool
+<img width="397" height="234" alt="image" src="https://github.com/user-attachments/assets/9d8bd3cf-e40b-4741-a2e0-d0a7fcbae737" />
+### Quick File Scanner
+<img width="381" height="275" alt="image" src="https://github.com/user-attachments/assets/b2e22d5c-2fb6-4603-b7f1-3abbda8cef9d" />
+### Email Centre Interface
+<img width="414" height="200" alt="image" src="https://github.com/user-attachments/assets/4f77d28f-55ed-4b7a-94b7-cc1c9228d73b" />
+### Admin Dashboard Interface
+<img width="439" height="212" alt="image" src="https://github.com/user-attachments/assets/894e3c00-4492-4d16-9dd4-5e43e82055d7" />
+### PrivGuard Login Page
+<img width="470" height="225" alt="image" src="https://github.com/user-attachments/assets/50a01c34-a3d3-4720-8f98-2b85087578a6" />
+### PrivGuard OAuth Result 
+<img width="469" height="183" alt="image" src="https://github.com/user-attachments/assets/05a1ad9b-96bc-459b-bf0a-25b8f9c39aa6" />
+### PrivGuard Admin Login Section
+<img width="467" height="224" alt="image" src="https://github.com/user-attachments/assets/3c4357c6-65aa-4c5e-a345-f5fd3aca8df7" />
+### PrivGuard Email Inbox Card
+<img width="451" height="196" alt="image" src="https://github.com/user-attachments/assets/4f833d26-d1a8-408c-989c-919b5fb73c03" />
+###  PrivGuard Email Scanner Card
+<img width="446" height="219" alt="image" src="https://github.com/user-attachments/assets/90f7114d-2fde-44dc-9eb1-3d40150f79de" />
+###  PrivGuard Threat Report Card
+<img width="453" height="217" alt="image" src="https://github.com/user-attachments/assets/cdeec664-59f7-41b4-b2ed-5c2e93eab1f0" />
+### PrivGuard Setting Section
+<img width="441" height="191" alt="image" src="https://github.com/user-attachments/assets/e166c2a2-1ecf-44c3-b8e3-51efca7cb43a" />
+### PrivGuard Help Section 
+<img width="432" height="176" alt="image" src="https://github.com/user-attachments/assets/258dff43-cf9f-4b60-b13a-73bd965c1148" />
+### PrivGuard SOC Dashboard Interface
+<img width="417" height="251" alt="image" src="https://github.com/user-attachments/assets/e00e2cc6-2eec-4883-9f74-5cfc91245971" />
+
+
+
+
+## Author
+
+Afolarin Ayomide
 
 ## Copyright
 
